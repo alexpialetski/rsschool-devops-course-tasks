@@ -8,7 +8,7 @@
     ],
     "terraform-env": [
       {
-        "env": "TERRAFORM_*"
+        "env": "TF_VAR_*"
       },
       {
         "externalDependencies": []
