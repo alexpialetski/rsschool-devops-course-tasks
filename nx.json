@@ -1,0 +1,62 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "terraform-files": ["{projectRoot}/**/*.tf"],
+    "terraform-init-outputs": [
+      "{projectRoot}/.terraform",
+      "{projectRoot}/.terraform.lock.hcl"
+    ],
+    "terraform-env": [
+      {
+        "env": "TERRAFORM_*"
+      },
+      {
+        "externalDependencies": []
+      }
+    ],
+    "terraform-all": [
+      "terraform-files",
+      "terraform-init-outputs",
+      "terraform-env"
+    ]
+  },
+  "targetDefaults": {
+    "terraform-init": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/provider.tf",
+        "{projectRoot}/backend.tf",
+        "terraform-env"
+      ],
+      "outputs": [
+        "{projectRoot}/.terraform",
+        "{projectRoot}/.terraform.lock.hcl"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "terraform init"
+      }
+    },
+    "terraform-plan": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["terraform-init"],
+      "inputs": ["terraform-all"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "terraform plan",
+        "args": ["-out=tfplan"]
+      }
+    },
+    "terraform-apply": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["terraform-plan"],
+      "inputs": ["terraform-all"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "terraform apply",
+        "args": ["-auto-approve", "tfplan"]
+      }
+    }
+  }
+}
