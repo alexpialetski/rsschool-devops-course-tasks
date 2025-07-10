@@ -2,20 +2,15 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
     "terraform-files": ["{projectRoot}/**/*.tf"],
-    "terraform-init-outputs": [
-      "{projectRoot}/.terraform",
-      "{projectRoot}/.terraform.lock.hcl"
-    ],
     "terraform-env": [
       {
-        "env": "TF_VAR_*"
+        "env": "TF_VAR_region"
+      },
+      {
+        "env": "TF_VAR_account_id"
       }
     ],
-    "terraform-all": [
-      "terraform-files",
-      "terraform-init-outputs",
-      "terraform-env"
-    ]
+    "terraform-all": ["terraform-files", "terraform-env"]
   },
   "targetDefaults": {
     "terraform-init": {
