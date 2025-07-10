@@ -13,6 +13,10 @@ terraform {
       version = "2.3.5"
     }
   }
+
+  # needed for NX cache reset when new module is added
+  # required_modules {
+  # }
 }
 
 provider "aws" {
