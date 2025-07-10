@@ -1,0 +1,22 @@
+{
+  "name": "cluster",
+  "projectType": "application",
+  "root": "packages/cluster",
+  "sourceRoot": "packages/cluster",
+  "targets": {
+    "terraform-init": {
+      "dependsOn": [
+        {
+          "projects": ["setup"],
+          "target": "terraform-apply"
+        }
+      ],
+      "options": {
+        "args": ["-backend-config=../setup/backend.config", "-reconfigure"]
+      }
+    },
+    "terraform-plan": {},
+    "terraform-apply": {}
+  },
+  "tags": ["infrastructure", "terraform"]
+}
