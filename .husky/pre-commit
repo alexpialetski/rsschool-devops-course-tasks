@@ -1,1 +1,1 @@
-nx run-many -t terraform-fmt
+lint-staged
