@@ -1,0 +1,3 @@
+availability_zones_count=2
+control_plane_nodes_count=2
+worker_nodes_count=2

@@ -1,4 +1,6 @@
-# Create public subnets for NAT gateways - one per AZ
+################################################################################
+# Public Subnet and NAT Gateway for internet access
+################################################################################
 resource "aws_subnet" "public" {
   count = var.availability_zones_count
 
@@ -37,6 +39,10 @@ resource "aws_nat_gateway" "natgateway" {
 
   depends_on = [aws_internet_gateway.igw]
 }
+
+################################################################################
+# Public Route Table for internet access
+################################################################################
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.k8s_vpc.id

@@ -12,11 +12,18 @@
         }
       ],
       "options": {
-        "args": ["-backend-config=../setup/backend.config", "-reconfigure"]
+        "args": ["-backend-config=../setup/backend.config"]
       }
     },
-    "terraform-plan": {},
-    "terraform-apply": {}
+    "terraform-plan": {
+      "configurations": {
+        "stable": {
+          "args": ["-var-file=./tfvars/stable.tfvars"]
+        }
+      }
+    },
+    "terraform-apply": {},
+    "terraform-fmt": {}
   },
   "tags": ["infrastructure", "terraform"]
 }

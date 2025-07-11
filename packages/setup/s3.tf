@@ -1,7 +1,7 @@
 // check if bucket already exists
 data "external" "check_bucket" {
   program = ["bash", "./scripts/check_bucket.sh"]
-  
+
 
   query = {
     bucket_name = local.bucket_name

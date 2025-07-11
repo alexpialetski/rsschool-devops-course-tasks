@@ -10,8 +10,8 @@ variable "availability_zones_count" {
   default     = 2
 
   validation {
-    condition     = var.availability_zones_count >= 2
-    error_message = "At least 2 AZs are required for high availability."
+    condition     = var.availability_zones_count >= 1
+    error_message = "At least 1 AZs are required for high availability."
   }
 }
 
@@ -35,10 +35,4 @@ variable "worker_nodes_count" {
     condition     = var.worker_nodes_count >= 1
     error_message = "At least 1 worker node is required."
   }
-}
-
-variable "environment" {
-  description = "Environment name (e.g., dev, staging, prod)"
-  type        = string
-  default     = "dev"
 }

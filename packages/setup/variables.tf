@@ -11,5 +11,5 @@ variable "account_id" {
 variable "github_repo" {
   description = "GitHub repository in the format 'owner/repo' for GitHub Actions integration"
   type        = string
-  default = "alexpialetski/rsschool-devops-course-tasks"
+  default     = "alexpialetski/rsschool-devops-course-tasks"
 }
