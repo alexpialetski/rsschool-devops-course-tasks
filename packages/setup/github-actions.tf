@@ -1,30 +1,14 @@
-resource "aws_iam_role" "github_actions" {
-  name = "GithubActionsRole"
+module "github-oidc" {
+  source  = "terraform-module/github-oidc-provider/aws"
+  version = "~> 1"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}/*"
-          }
-        }
-      }
-    ]
-  })
-}
+  count = var.github_actions_role ? 1 : 0
 
-resource "aws_iam_role_policy_attachment" "github_actions_role_policies" {
-  for_each = toset([
+  create_oidc_provider = true
+  create_oidc_role     = true
+
+  repositories              = ["alexpialetski/rsschool-devops-course-tasks"]
+  oidc_role_attach_policies = [
     "AmazonSSMFullAccess",
     "AmazonEC2FullAccess",
     "AmazonRoute53FullAccess",
@@ -33,8 +17,5 @@ resource "aws_iam_role_policy_attachment" "github_actions_role_policies" {
     "AmazonVPCFullAccess",
     "AmazonSQSFullAccess",
     "AmazonEventBridgeFullAccess"
-  ])
-
-  role       = aws_iam_role.github_actions.name
-  policy_arn = "arn:aws:iam::aws:policy/${each.key}"
+  ]
 }

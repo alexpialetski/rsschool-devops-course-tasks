@@ -8,8 +8,8 @@ variable "account_id" {
   type        = string
 }
 
-variable "github_repo" {
-  description = "GitHub repository in the format 'owner/repo' for GitHub Actions integration"
-  type        = string
-  default     = "alexpialetski/rsschool-devops-course-tasks"
+variable "github_actions_role" {
+  type = bool
+  description = "Enable GitHub Actions role for AWS access"
+  default = false
 }
