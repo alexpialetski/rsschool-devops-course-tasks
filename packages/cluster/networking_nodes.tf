@@ -1,5 +1,5 @@
 ################################################################################
-# Subnet and Route Table Configuration for Kubernetes Cluster
+# Private subnets and Route Table Configuration for Kubernetes Cluster
 ################################################################################
 
 resource "aws_subnet" "private" {
@@ -38,18 +38,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-locals {
-  sg_ingress_ports = [{
-    description = "HTTP"
-    port        = 80
-    },
-    {
-      description = "HTTPS"
-      port        = 443
-    }
-  ]
-}
-
 ################################################################################
 # Define the security group for EC2 Webservers
 ################################################################################
@@ -58,18 +46,37 @@ resource "aws_security_group" "ec2_security_group" {
   description = "Allow traffic for EC2 Webservers"
   vpc_id      = aws_vpc.k8s_vpc.id
 
-  dynamic "ingress" {
-    for_each = local.sg_ingress_ports
-    iterator = sg_ingress
+  ############################
+  # INGRESS RULES
+  ############################
 
-    content {
-      description = sg_ingress.value["description"]
-      from_port   = sg_ingress.value["port"]
-      to_port     = sg_ingress.value["port"]
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
+  ingress {
+    description     = "Allow incoming HTTP connections from Load Balancer"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.aws-sg-load-balancer.id]
   }
+
+  ingress {
+    description     = "Allow incoming HTTPS connections from Load Balancer"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.aws-sg-load-balancer.id]
+  }
+
+  ingress {
+    description = "Allow incoming SSH connections from nodes in the same cluster"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    self        = true
+  }
+
+  ############################
+  # EGRESS RULES
+  ############################
 
   egress {
     from_port   = 0

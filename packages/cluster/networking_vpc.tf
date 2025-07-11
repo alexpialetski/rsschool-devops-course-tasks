@@ -21,6 +21,10 @@ resource "aws_vpc" "k8s_vpc" {
   }
 }
 
+################################################################################
+# SSM role and endpoints to enable connection to EC2 instances
+################################################################################
+
 resource "aws_iam_role" "ssm_role" {
   name = "SSMRole"
 
@@ -71,5 +75,7 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
   security_group_ids  = [aws_security_group.ssm_https.id]
   private_dns_enabled = true
   ip_address_type     = "ipv4"
-  subnet_ids          = [for subnet in aws_subnet.public : subnet.id]
+  subnet_ids          = sort([for subnet in aws_subnet.public : subnet.id])
+
+  depends_on = [aws_subnet.public]
 }
