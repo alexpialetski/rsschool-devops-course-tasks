@@ -1,14 +1,23 @@
 locals {
   services = {
-    "ec2messages" : {
-      "name" : "com.amazonaws.${data.aws_region.current.id}.ec2messages"
-    },
-    "ssm" : {
-      "name" : "com.amazonaws.${data.aws_region.current.id}.ssm"
-    },
-    "ssmmessages" : {
-      "name" : "com.amazonaws.${data.aws_region.current.id}.ssmmessages"
-    }
+    "ec2messages" : "com.amazonaws.${data.aws_region.current.id}.ec2messages",
+    "ssm" : "com.amazonaws.${data.aws_region.current.id}.ssm",
+    "ssmmessages" : "com.amazonaws.${data.aws_region.current.id}.ssmmessages"
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "k8s_vpc" {
+  cidr_block = var.vpc_cidr
+
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "${local.naming_prefix}-vpc"
   }
 }
 
@@ -40,12 +49,10 @@ resource "aws_security_group" "ssm_https" {
   vpc_id      = aws_vpc.k8s_vpc.id
 
   ingress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
-    # cidr_blocks = [for subnet in aws_subnet.private : subnet.cidr_block]
-    # use security group instead of cidr_blocks
-    security_groups = [aws_security_group.ec2_security_group.id]
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [for subnet in aws_subnet.private : subnet.cidr_block]
   }
 
   egress {
@@ -59,7 +66,7 @@ resource "aws_security_group" "ssm_https" {
 resource "aws_vpc_endpoint" "ssm_endpoint" {
   for_each            = local.services
   vpc_id              = aws_vpc.k8s_vpc.id
-  service_name        = each.value.name
+  service_name        = each.value
   vpc_endpoint_type   = "Interface"
   security_group_ids  = [aws_security_group.ssm_https.id]
   private_dns_enabled = true

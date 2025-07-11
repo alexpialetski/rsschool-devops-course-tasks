@@ -8,6 +8,9 @@
       },
       {
         "env": "TF_VAR_account_id"
+      },
+      {
+        "env": "TF_WORKSPACE"
       }
     ],
     "terraform-all": ["terraform-files", "terraform-env"]
@@ -27,7 +30,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "terraform init"
+        "command": "terraform init -reconfigure"
       }
     },
     "terraform-plan": {
@@ -36,8 +39,7 @@
       "inputs": ["terraform-all"],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "terraform plan",
-        "args": ["-out=tfplan"]
+        "command": "terraform plan -out=tfplan"
       }
     },
     "terraform-apply": {
@@ -46,8 +48,15 @@
       "inputs": ["terraform-all"],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "terraform apply",
-        "args": ["-auto-approve", "tfplan"]
+        "command": "terraform apply -auto-approve tfplan"
+      }
+    },
+    "terraform-fmt": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "terraform fmt -write=true"
       }
     }
   },

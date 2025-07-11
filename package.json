@@ -6,6 +6,10 @@
     "packages/*"
   ],
   "devDependencies": {
+    "husky": "^9.1.7",
     "nx": "21.2.1"
+  },
+  "scripts": {
+    "prepare": "husky"
   }
 }

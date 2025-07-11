@@ -8,53 +8,6 @@ data "aws_ami" "amazon-linux-2023" {
   }
 }
 
-variable "sg_ingress_ports" {
-  description = "List of ingress ports for the security group"
-  type = list(object({
-    description = string
-    port        = number
-  }))
-  default = [
-    {
-      description = "HTTP"
-      port        = 80
-    },
-    {
-      description = "HTTPS"
-      port        = 443
-    }
-  ]
-}
-
-resource "aws_security_group" "ec2_security_group" {
-  description = "Allow traffic for EC2 Webservers"
-  vpc_id      = aws_vpc.k8s_vpc.id
-
-  dynamic "ingress" {
-    for_each = var.sg_ingress_ports
-    iterator = sg_ingress
-
-    content {
-      description = sg_ingress.value["description"]
-      from_port   = sg_ingress.value["port"]
-      to_port     = sg_ingress.value["port"]
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${local.naming_prefix}-sg-webserver"
-  }
-}
-
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "SSMInstanceProfile"
   role = aws_iam_role.ssm_role.name

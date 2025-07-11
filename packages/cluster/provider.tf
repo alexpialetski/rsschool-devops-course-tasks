@@ -10,9 +10,8 @@ terraform {
 provider "aws" {
   default_tags {
     tags = {
-      Environment = var.environment
-      Project     = "K3s Cluster"
-      Workspace   = terraform.workspace
+      Project   = "K3s Cluster"
+      Workspace = terraform.workspace
     }
   }
 }

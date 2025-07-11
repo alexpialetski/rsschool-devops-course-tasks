@@ -14,7 +14,8 @@
         "{projectRoot}/terraform.tfstate",
         "{projectRoot}/backend.config"
       ]
-    }
+    },
+    "terraform-fmt": {}
   },
   "tags": ["infrastructure", "terraform"]
 }
