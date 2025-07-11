@@ -7,7 +7,7 @@ module "github-oidc" {
   create_oidc_provider = true
   create_oidc_role     = true
 
-  repositories              = ["alexpialetski/rsschool-devops-course-tasks"]
+  repositories = ["alexpialetski/rsschool-devops-course-tasks"]
   oidc_role_attach_policies = [
     "AmazonSSMFullAccess",
     "AmazonEC2FullAccess",

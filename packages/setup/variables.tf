@@ -9,7 +9,7 @@ variable "account_id" {
 }
 
 variable "github_actions_role" {
-  type = bool
+  type        = bool
   description = "Enable GitHub Actions role for AWS access"
-  default = false
+  default     = false
 }
