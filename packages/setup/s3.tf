@@ -13,9 +13,10 @@ resource "aws_s3_bucket" "tf_state" {
 
   bucket              = local.bucket_name
   object_lock_enabled = true
+  force_destroy       = true
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 

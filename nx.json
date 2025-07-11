@@ -30,7 +30,7 @@
       ],
       "options": {
         "cwd": "{projectRoot}",
-        "command": "terraform init -reconfigure"
+        "command": "terraform init"
       }
     },
     "terraform-plan": {
@@ -57,6 +57,13 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "terraform fmt -write=true"
+      }
+    },
+    "terraform-destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "terraform destroy -auto-approve"
       }
     }
   },

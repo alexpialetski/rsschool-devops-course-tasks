@@ -15,6 +15,14 @@
         "{projectRoot}/backend.config"
       ]
     },
+    "terraform-destroy": {
+      "dependsOn": [
+        {
+          "projects": ["cluster"],
+          "target": "terraform-destroy"
+        }
+      ]
+    },
     "terraform-fmt": {}
   },
   "tags": ["infrastructure", "terraform"]

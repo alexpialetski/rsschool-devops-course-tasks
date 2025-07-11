@@ -12,7 +12,7 @@
         }
       ],
       "options": {
-        "args": ["-backend-config=../setup/backend.config"]
+        "args": ["-backend-config=../setup/backend.config", "-reconfigure"]
       }
     },
     "terraform-plan": {
@@ -23,6 +23,7 @@
       }
     },
     "terraform-apply": {},
+    "terraform-destroy": {},
     "terraform-fmt": {}
   },
   "tags": ["infrastructure", "terraform"]
