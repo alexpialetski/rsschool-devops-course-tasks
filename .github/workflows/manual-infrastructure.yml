@@ -44,6 +44,11 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup Terraform Environment
         uses: ./.github/actions/setup-terraform
         with:
