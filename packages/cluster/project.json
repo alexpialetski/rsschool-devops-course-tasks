@@ -1,0 +1,31 @@
+{
+  "name": "cluster",
+  "projectType": "application",
+  "root": "packages/cluster",
+  "sourceRoot": "packages/cluster",
+  "targets": {
+    "terraform-init": {
+      "dependsOn": [
+        {
+          "projects": ["setup"],
+          "target": "terraform-apply"
+        }
+      ],
+      "options": {
+        "args": ["-backend-config=../setup/backend.config", "-reconfigure"]
+      }
+    },
+    "terraform-plan": {
+      "configurations": {
+        "stable": {
+          "args": ["-var-file=./tfvars/stable.tfvars"]
+        }
+      }
+    },
+    "terraform-apply": {},
+    "terraform-destroy": {},
+    "terraform-fmt": {},
+    "terraform-validate": {}
+  },
+  "tags": ["infrastructure", "terraform"]
+}
