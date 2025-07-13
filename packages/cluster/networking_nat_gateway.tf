@@ -13,6 +13,10 @@ resource "aws_subnet" "public" {
   tags = {
     Name = "${local.naming_prefix}-public-subnet-${count.index}"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
