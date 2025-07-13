@@ -1,0 +1,1 @@
+TOKEN=$(aws secretsmanager get-secret-value --secret-id ${secret_name} --query SecretString --output text)
