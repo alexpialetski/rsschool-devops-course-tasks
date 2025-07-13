@@ -22,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup Terraform Environment
         uses: ./.github/actions/setup-terraform
         with:
