@@ -23,7 +23,8 @@
         }
       ]
     },
-    "terraform-fmt": {}
+    "terraform-fmt": {},
+    "terraform-validate": {}
   },
   "tags": ["infrastructure", "terraform"]
 }
