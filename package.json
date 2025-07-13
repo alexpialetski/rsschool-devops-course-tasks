@@ -1,0 +1,21 @@
+{
+  "name": "my-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "nx": "21.2.1"
+  },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": [
+      "nx run-many -t terraform-fmt"
+    ]
+  }
+}

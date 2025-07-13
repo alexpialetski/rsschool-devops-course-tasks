@@ -1,0 +1,30 @@
+{
+  "name": "setup",
+  "projectType": "application",
+  "root": "packages/setup",
+  "sourceRoot": "packages/setup",
+  "targets": {
+    "terraform-init": {},
+    "terraform-plan": {
+      "cache": true
+    },
+    "terraform-apply": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/terraform.tfstate",
+        "{projectRoot}/backend.config"
+      ]
+    },
+    "terraform-destroy": {
+      "dependsOn": [
+        {
+          "projects": ["cluster"],
+          "target": "terraform-destroy"
+        }
+      ]
+    },
+    "terraform-fmt": {},
+    "terraform-validate": {}
+  },
+  "tags": ["infrastructure", "terraform"]
+}
