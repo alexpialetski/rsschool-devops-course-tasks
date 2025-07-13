@@ -38,7 +38,7 @@ Configure these environments in your GitHub repository settings (Settings > Envi
 ## Workspace Configuration
 
 - **Development**: Uses `dev` workspace
-- **Production**: Uses `stable` workspace (triggered from `main` branch)
+- **Production**: Uses `default` workspace (triggered from `main` branch)
 
 ## Workflow Files Overview
 
@@ -61,7 +61,7 @@ Configure these environments in your GitHub repository settings (Settings > Envi
 - **Inputs**:
   - `action`: plan/apply/destroy
   - `project`: setup/cluster
-  - `environment`: dev/stable
+  - `environment`: dev/default
 
 ## Composite Actions
 
