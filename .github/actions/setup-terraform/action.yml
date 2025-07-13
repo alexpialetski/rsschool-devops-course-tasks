@@ -18,6 +18,10 @@ inputs:
     description: 'Terraform version'
     required: false
     default: '~1.8.0'
+  skip-setup-apply:
+    description: 'Skip the setup apply step'
+    required: false
+    default: 'false'
 outputs:
   aws-account-id:
     description: 'AWS Account ID retrieved from credentials'
@@ -70,10 +74,12 @@ runs:
       shell: bash
 
     - name: Validate Terraform (Setup)
+      if: ${{ inputs.skip-setup-apply != 'true' }}
       run: |
         npx nx run setup:terraform-validate
       shell: bash
 
     - name: Apply Setup Infrastructure (creates backend for cluster)
+      if: ${{ inputs.skip-setup-apply != 'true' }}
       run: npx nx run setup:terraform-apply
       shell: bash
