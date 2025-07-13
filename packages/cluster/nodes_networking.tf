@@ -39,37 +39,61 @@ resource "aws_route_table_association" "private" {
 }
 
 ################################################################################
-# Define the security group for EC2 Webservers
+# Define the security group for k8s nodes
 ################################################################################
 
-resource "aws_security_group" "ec2_security_group" {
-  description = "Allow traffic for EC2 Webservers"
+resource "aws_security_group" "node_security_group" {
+  description = "Allow traffic for EC2 kubernetes nodes"
   vpc_id      = aws_vpc.k8s_vpc.id
 
   ############################
   # INGRESS RULES
   ############################
 
-  ingress {
-    description     = "Allow incoming HTTP connections from Load Balancer"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.aws-sg-load-balancer.id]
-  }
+  # ingress {
+  #   description     = "Allow incoming HTTP connections from Load Balancer"
+  #   from_port       = 80
+  #   to_port         = 80
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.aws-sg-load-balancer.id]
+  # }
 
-  ingress {
-    description     = "Allow incoming HTTPS connections from Load Balancer"
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    security_groups = [aws_security_group.aws-sg-load-balancer.id]
-  }
+  # ingress {
+  #   description     = "Allow incoming HTTPS connections from Load Balancer"
+  #   from_port       = 443
+  #   to_port         = 443
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.aws-sg-load-balancer.id]
+  # }
 
   ingress {
     description = "Allow incoming SSH connections from nodes in the same cluster"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    self        = true
+  }
+
+  ingress {
+    description = "K3s supervisor and Kubernetes API Server"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    self        = true
+  }
+
+  ingress {
+    description = "Flannel VXLAN traffic"
+    from_port   = 8472
+    to_port     = 8472
+    protocol    = "udp"
+    self        = true
+  }
+
+  ingress {
+    description = "Kubelet metrics"
+    from_port   = 10250
+    to_port     = 10250
     protocol    = "tcp"
     self        = true
   }
@@ -86,6 +110,6 @@ resource "aws_security_group" "ec2_security_group" {
   }
 
   tags = {
-    Name = "${local.naming_prefix}-sg-webserver"
+    Name = "${local.naming_prefix}-sg-node"
   }
 }

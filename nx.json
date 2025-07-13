@@ -1,7 +1,11 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "terraform-files": ["{projectRoot}/**/*.tf"],
+    "terraform-files": [
+      "{projectRoot}/**/*.tf",
+      "{projectRoot}/templates/*",
+      "{projectRoot}/tfvars/*"
+    ],
     "terraform-env": [
       {
         "env": "TF_VAR_region"
@@ -45,7 +49,7 @@
     "terraform-apply": {
       "executor": "nx:run-commands",
       "dependsOn": ["terraform-plan"],
-      "inputs": ["terraform-all"],
+      "inputs": ["terraform-all", "{projectRoot}/tfplan"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "terraform apply -auto-approve tfplan"
@@ -66,6 +70,5 @@
         "command": "terraform destroy -auto-approve"
       }
     }
-  },
-  "nxCloudId": "686e975426cf276f670bc399"
+  }
 }

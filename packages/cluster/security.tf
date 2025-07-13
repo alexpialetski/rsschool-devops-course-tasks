@@ -28,19 +28,19 @@
 #   }
 # }
 
-# # Security group for Kubernetes worker nodes
-# resource "aws_security_group" "workers" {
-#   name        = "${local.naming_prefix}-workers-sg"
-#   description = "Security group for K8s worker nodes"
+# # Security group for Kubernetes agent nodes
+# resource "aws_security_group" "agents" {
+#   name        = "${local.naming_prefix}-agents-sg"
+#   description = "Security group for K8s agent nodes"
 #   vpc_id      = aws_vpc.k8s_vpc.id
 
-#   # Allow all traffic between worker nodes
+#   # Allow all traffic between agent nodes
 #   ingress {
 #     from_port   = 0
 #     to_port     = 0
 #     protocol    = "-1"
 #     self        = true
-#     description = "Allow all traffic between worker nodes"
+#     description = "Allow all traffic between agent nodes"
 #   }
 
 #   # Allow all traffic from control plane nodes
@@ -62,7 +62,7 @@
 #   }
 
 #   tags = {
-#     Name        = "${local.naming_prefix}-workers-sg"
+#     Name        = "${local.naming_prefix}-agents-sg"
 #     Environment = var.environment
 #   }
 # }
