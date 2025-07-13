@@ -27,7 +27,7 @@ on:
         type: choice
         options:
           - dev
-          - stable
+          - default
 
 env:
   # AWS Configuration

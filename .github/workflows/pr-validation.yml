@@ -15,7 +15,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   
   # Terraform Configuration - will be set dynamically after AWS authentication
-  TF_WORKSPACE: stable
+  TF_WORKSPACE: default
 
 jobs:
   validate:
