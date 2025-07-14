@@ -64,6 +64,7 @@
       }
     },
     "terraform-validate": {
+      "cache": true,
       "executor": "nx:run-commands",
       "dependsOn": ["terraform-init"],
       "options": {
