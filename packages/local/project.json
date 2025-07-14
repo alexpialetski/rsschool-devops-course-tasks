@@ -1,0 +1,31 @@
+{
+  "name": "local",
+  "projectType": "application",
+  "root": "packages/local",
+  "sourceRoot": "packages/local",
+  "targets": {
+    "configure_aws": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./{projectRoot}/configure_aws.sh",
+        "args": ["--keys-file", "{workspaceRoot}/.keys"]
+      }
+    },
+    "configure_env_file": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["configure_aws"],
+      "options": {
+        "command": "bash ./{projectRoot}/configure_env_file.sh",
+        "args": ["--env-file", "{workspaceRoot}/.env"]
+      }
+    },
+    "configure_github_secrets": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["configure_aws"],
+      "options": {
+        "command": "bash ./{projectRoot}/configure_github_secrets.sh"
+      }
+    }
+  },
+  "tags": ["development", "bash"]
+}

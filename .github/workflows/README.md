@@ -1,170 +1,258 @@
 # GitHub Actions Configuration
 
-## Required Secrets
+This document describes the CI/CD pipeline configuration for the RS School DevOps Course infrastructure deployment. The pipeline automates the deployment of a K3s Kubernetes cluster on AWS using Terraform and Nx workspace management.
 
-Set these secrets in your GitHub repository settings (Settings > Secrets and variables > Actions):
+The workflows are designed for scenarios where AWS accounts are temporary (like KodeKloud).
 
-### AWS Configuration
+## 📋 Overview
+
+The CI/CD pipeline consists of three main workflows:
+
+1. **CI/CD Pipeline** (`ci.yml`) - Automated deployment and infrastructure management
+2. **PR Validation** (`pr-validation.yml`) - Pull request validation with security scanning
+3. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
+
+## 🔧 Required Configuration
+
+### Secrets
+
+Configure these secrets in your GitHub repository (Settings > Secrets and variables > Actions):
+
+#### AWS Configuration
+
 - `AWS_ACCESS_KEY_ID`: AWS access key ID for Terraform operations
 - `AWS_SECRET_ACCESS_KEY`: AWS secret access key for Terraform operations
 
-### Optional Secrets
-- `NX_CLOUD_ACCESS_TOKEN`: If using Nx Cloud for distributed task execution and caching
+#### Optional Secrets
 
-## Required Variables
+- `NX_CLOUD_ACCESS_TOKEN`: Nx Cloud token for distributed task execution and caching
 
-Set these variables in your GitHub repository settings (Settings > Secrets and variables > Actions):
+### Variables
 
-### AWS Configuration
-- `AWS_REGION`: AWS region to deploy to (default: us-east-1)
+Configure these variables in your GitHub repository (Settings > Secrets and variables > Actions):
 
-## Terraform Variables
+#### AWS Configuration
 
-The following Terraform variables are automatically set based on AWS authentication:
-- `TF_VAR_region`: Set from AWS_REGION environment variable
-- `TF_VAR_account_id`: Taken from outputs of configure-aws-credentials
+- `AWS_REGION`: AWS region for deployment (default: `us-east-1`)
 
-## Environments
+### Environment Variables
 
-Configure these environments in your GitHub repository settings (Settings > Environments):
+The following Terraform variables are automatically configured:
 
-### production
-- Required reviewers: Set up manual approval for production deployments
-- Deployment branches: Only allow deployments from `main` branch
+- `TF_VAR_region`: Set from `AWS_REGION` variable
+- `TF_VAR_account_id`: Retrieved from AWS credentials during authentication
 
-### dev
-- No restrictions (optional)
+## 🌍 Environment Configuration
 
-## Workspace Configuration
+### GitHub Environments
 
-- **Development**: Uses `dev` workspace
+Configure these environments in your repository (Settings > Environments):
+
+#### `production`
+
+- **Purpose**: Production deployments from `main` branch
+- **Protection Rules**:
+  - Required reviewers for manual approval
+  - Deployment branches: Only `main` branch
+  - Environment secrets: Production AWS credentials
+
+#### `dev`
+
+- **Purpose**: Development deployments and testing
+- **Protection Rules**: Optional, can be left unrestricted
+- **Usage**: Manual deployments and testing
+
+### Terraform Workspaces
+
 - **Production**: Uses `default` workspace (triggered from `main` branch)
+- **Development**: Uses `dev` workspace (for manual deployments)
 
-## Workflow Files Overview
+## 🚀 Workflow Details
 
-### 1. `ci.yml` - Main CI/CD Pipeline
-- **Triggers**: Push to main/develop, PRs
-- **Jobs**: 
-  - `main`: Format, apply setup (creates backend), plan cluster
-  - `security`: Run security scans (Checkov)
-  - `deploy`: Deploy cluster infrastructure (setup already applied)
-  - `cleanup`: Manual destruction workflow
+### 1. CI/CD Pipeline (`ci.yml`)
 
-### 2. `pr-validation.yml` - Pull Request Validation
-- **Triggers**: PRs to main/develop
-- **Jobs**:
-  - `validate`: Apply setup, validate and plan cluster (full deployment flow)
-  - `security-scan`: Security scanning with PR comments
+**Trigger**: Push to `main` branch
 
-### 3. `manual-infrastructure.yml` - Manual Infrastructure Management
-- **Triggers**: Manual workflow dispatch
-- **Inputs**:
-  - `action`: plan/apply/destroy
-  - `project`: setup/cluster
-  - `environment`: dev/default
+**Jobs**:
 
-## Composite Actions
+#### `main` Job
+
+- **Purpose**: Infrastructure validation and planning
+- **Steps**:
+  1. Checkout code with full history
+  2. Setup Terraform environment (composite action)
+  3. Plan cluster infrastructure with stable configuration
+  4. Upload Terraform plans as artifacts
+
+#### `deploy` Job
+
+- **Purpose**: Deploy infrastructure to production
+- **Dependencies**: Requires `main` job to complete
+- **Environment**: `production` (manual approval required)
+- **Steps**:
+  1. Checkout code
+  2. Setup Terraform environment
+  3. Download Terraform plans
+  4. Apply cluster infrastructure
+
+#### `cleanup` Job
+
+- **Purpose**: Destroy infrastructure (manual trigger only)
+- **Trigger**: `workflow_dispatch` event
+- **Environment**: `production`
+- **Steps**:
+  1. Setup Terraform environment
+  2. Destroy cluster infrastructure
+  3. Destroy setup infrastructure
+
+### 2. PR Validation (`pr-validation.yml`)
+
+**Trigger**: Pull requests to `main` branch
+
+**Permissions**:
+
+- `contents: read`
+- `pull-requests: write`
+- `issues: write`
+
+**Jobs**:
+
+#### `validate` Job
+
+- **Purpose**: Validate infrastructure changes
+- **Steps**:
+  1. Checkout code
+  2. Setup Terraform environment
+  3. Validate cluster configuration
+  4. Plan infrastructure changes
+  5. Comment on PR with plan results (WIP)
+
+#### `security-scan` Job
+
+- **Purpose**: Security scanning of infrastructure code
+- **Tools**:
+  - **Checkov**: Infrastructure security scanning
+  - **TFSec**: Terraform security analysis
+- **Output**: Security findings as PR comments
+
+### 3. Manual Infrastructure (`manual-infrastructure.yml`)
+
+**Trigger**: Manual workflow dispatch
+
+**Inputs**:
+
+- `action`: Action to perform (`plan`, `apply`, `destroy`)
+- `project`: Target project (`setup`, `cluster`)
+- `environment`: Target environment (`dev`, `default`)
+
+**Jobs**:
+
+#### `infrastructure` Job
+
+- **Purpose**: Manual infrastructure management
+- **Environment**: Dynamic based on input
+- **Steps**:
+  1. Checkout code
+  2. Setup Terraform environment
+  3. Execute specified Terraform action
+  4. Comment on manual run status
+
+## 🔨 Composite Actions
 
 ### `setup-terraform` Action
-Located at `.github/actions/setup-terraform/action.yml`, this composite action consolidates common setup steps:
 
-- **Checkout**: Code checkout with full history
-- **Node.js Setup**: Installs Node.js with npm caching
-- **Dependencies**: Installs npm dependencies
-- **Terraform Setup**: Configures Terraform with specified version
-- **AWS Authentication**: Sets up AWS credentials with output enabled
-- **Environment Variables**: Sets TF_VAR_region and TF_VAR_account_id from AWS credentials output
+**Location**: `.github/actions/setup-terraform/action.yml`
 
-**Inputs:**
+**Purpose**: Consolidates common setup steps for all workflows
+
+**Inputs**:
+
 - `aws-access-key-id`: AWS Access Key ID (required)
 - `aws-secret-access-key`: AWS Secret Access Key (required)
 - `aws-region`: AWS Region (required)
 - `node-version`: Node.js version (optional, default: '20')
 - `terraform-version`: Terraform version (optional, default: '~1.8.0')
+- `skip-setup-apply`: Skip setup infrastructure deployment (optional, default: 'false')
 
-**Outputs:**
-- `aws-account-id`: AWS Account ID retrieved from configure-aws-credentials action
+**Outputs**:
+
+- `aws-account-id`: AWS Account ID from credentials
 - `aws-region`: AWS Region being used
 
-## Nx Integration
+**Steps**:
 
-The workflows leverage your Nx configuration for:
+1. **Node.js Setup**: Install Node.js with npm caching
+2. **Dependencies**: Install npm dependencies
+3. **Nx Setup**: Configure Nx for affected commands
+4. **Terraform Setup**: Install specified Terraform version
+5. **AWS Configuration**: Set up AWS credentials and environment
+6. **Terraform Variables**: Set TF_VAR_region and TF_VAR_account_id
+7. **Format Check**: Validate Terraform code formatting
+8. **Setup Validation**: Validate setup infrastructure
+9. **Setup Apply**: Deploy setup infrastructure (creates backend)
 
-- **Critical Dependency**: Setup project creates the S3 backend bucket that cluster project needs
-- **Sequential Execution**: Always applies setup first, then plans/applies cluster
-- **Parallel Execution**: Runs tasks in parallel where possible (except for the setup→cluster dependency)
-- **Caching**: Uses Nx caching for faster builds
-- **Dependencies**: Respects project dependencies (setup → cluster)
+## 🔗 Nx Integration
 
-**Note**: The workflows are optimized for temporary AWS accounts and handle the critical dependency where setup creates the backend storage for cluster's Terraform state.
+### Workspace Configuration
 
-## Security Features
+The workflows leverage Nx workspace features:
 
-- **Terraform State**: Securely stored in AWS S3 with backend configuration
-- **Security Scanning**: Checkov and TFSec for Terraform security
-- **PR Comments**: Automated security findings in PR comments
+- **Project Dependencies**: Setup → Cluster dependency management
+- **Task Caching**: Faster execution with Nx caching
+- **Parallel Execution (WIP)**: Run independent tasks in parallel
+- **Affected Commands (WIP)**: Only process changed projects
+
+### Task Execution
+
+**Terraform Tasks**:
+
+- `terraform-init`: Initialize Terraform with backend
+- `terraform-plan`: Plan infrastructure changes
+- `terraform-apply`: Apply infrastructure changes
+- `terraform-validate`: Validate configuration
+- `terraform-fmt`: Format Terraform code
+- `terraform-destroy`: Destroy infrastructure
+
+## 🔐 Security Features
+
+### Pipeline Security
+
+- **Security Scanning**: Automated with Checkov and TFSec
+- **PR Comments**: Security findings reported in pull requests
 - **Environment Protection**: Manual approval for production deployments
+- **Credential Management**: AWS credentials stored as GitHub secrets
 
-## Usage Examples
+### Access Control
 
-### Deploy to Development
-```bash
-# Automatically happens on push to develop branch
-git push origin develop
-```
+- **IAM Roles**: Least-privilege access for AWS resources
+- **GitHub Environments**: Environment-specific access controls
+- **Branch Protection (WIP)**: Deployment restrictions by branch
 
-### Deploy to Production
-```bash
-# Automatically happens on push to main branch (after approval)
-git push origin main
-```
+## 🛠️ Manual Deployment
 
-### Manual Infrastructure Management
-1. Go to Actions tab in GitHub
-2. Select "Manual Infrastructure Management"
-3. Click "Run workflow"
-4. Select action, project, and environment
-5. Click "Run workflow"
-
-### Emergency Destruction
-1. Go to Actions tab in GitHub
-2. Select "Manual Infrastructure Management"
-3. Select "destroy" action
-4. Select project and environment
-5. Confirm and run
+1. Navigate to GitHub repository
+2. Go to **Actions** tab
+3. Select **Manual Infrastructure Management**
+4. Click **Run workflow**
+5. Configure parameters:
+   - Action: `plan`, `apply`, or `destroy`
+   - Project: `setup` or `cluster`
+   - Environment: `dev` or `default`
+6. Click **Run workflow**
 
 ## Best Practices
 
 1. **Always create PRs** for infrastructure changes
 2. **Review security scan results** before merging
 3. **Use environments** for production deployments
-4. **Monitor maintenance reports** for resource cleanup
-5. **Keep secrets updated** and rotate regularly
-6. **Fresh deployments**: The pipeline is optimized for temporary AWS accounts and will always deploy both setup and cluster infrastructure
+4. **Keep secrets updated** and rotate regularly
+5. **Fresh deployments**: The pipeline is optimized for temporary AWS accounts and will always deploy both setup and cluster infrastructure
 
-## Temporary AWS Account Optimization
+## 📚 Related Documentation
 
-The workflows are designed for scenarios where AWS accounts are temporary (like KodeKloud):
-
-- **Backend Creation**: Setup project creates the S3 backend bucket that cluster needs
-- **Correct Order**: Always applies setup first, then plans/applies cluster
-- **Fresh state**: Each deployment starts with a clean infrastructure state
-- **Dependency respect**: Handles the critical setup→cluster backend dependency
-- **Simplified flow**: No complex conditional logic based on changed files
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Terraform state lock**: Wait for running operations to complete
-2. **AWS credentials**: Verify secrets are set correctly
-3. **Backend dependency**: Setup must complete before cluster can initialize
-4. **Fresh account**: Each deployment creates new infrastructure from scratch
-5. **Dependencies**: Setup creates the S3 backend bucket that cluster requires
-
-### Debugging Steps
-
-1. Check workflow logs in GitHub Actions
-2. Verify environment variables and secrets
-3. Run commands locally with same configuration
-4. Check AWS CloudFormation events if deployment fails
+- [Setup Package README](../packages/setup/README.md)
+- [Cluster Package README](../packages/cluster/README.md)
+- [Root README](../README.md)
+- [Nx Documentation](https://nx.dev/)
+- [Terraform Documentation](https://www.terraform.io/docs)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
