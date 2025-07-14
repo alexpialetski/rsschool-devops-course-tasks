@@ -6,8 +6,7 @@ on:
 
 env:
   # Nx Cloud configuration
-  NX_CLOUD_DISTRIBUTED_EXECUTION: true
-  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3
+  NX_CLOUD_DISTRIBUTED_EXECUTION: false
   NX_BRANCH: ${{ github.event.number || github.ref_name }}
   
   # AWS Configuration
