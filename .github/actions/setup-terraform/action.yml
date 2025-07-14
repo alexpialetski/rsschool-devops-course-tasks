@@ -42,6 +42,9 @@ runs:
       run: npm ci
       shell: bash
 
+    - name: Sets the base and head SHAs required for the nx affected commands in CI
+      uses: nrwl/nx-set-shas@v4
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
