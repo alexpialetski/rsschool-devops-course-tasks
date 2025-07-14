@@ -1,4 +1,4 @@
-keys.txt
+.keys
 .terraform
 .nx
 terraform.tfstate
