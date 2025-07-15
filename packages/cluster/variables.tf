@@ -22,7 +22,7 @@ variable "control_plane_config" {
   })
   default = {
     nodesNumber  = 1
-    instanceType = "t3.medium"
+    instanceType = "t3.small"
   }
 
   validation {
@@ -34,7 +34,7 @@ variable "control_plane_config" {
     error_message = "Control plane nodes count must be an odd number for high availability."
   }
   validation {
-    condition     = can(regex("^t3\\.(medium|large|xlarge|2xlarge)$", var.control_plane_config.instanceType))
+    condition     = can(regex("^t3\\.(small|medium|large|xlarge|2xlarge)$", var.control_plane_config.instanceType))
     error_message = "Control plane nodes instance type must be t3.medium or larger."
   }
 }
