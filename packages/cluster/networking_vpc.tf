@@ -31,6 +31,15 @@ resource "aws_security_group" "ssm_https" {
   vpc_id      = aws_vpc.k8s_vpc.id
 
   ingress {
+    description = "Allow SSM traffic for public subnets"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [for subnet in aws_subnet.public : subnet.cidr_block]
+  }
+
+  ingress {
+    description = "Allow SSM traffic for private subnets"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -43,6 +52,10 @@ resource "aws_security_group" "ssm_https" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "${local.naming_prefix}-ssm-sg"
+  }
 }
 
 resource "aws_vpc_endpoint" "ssm_endpoint" {
@@ -50,10 +63,12 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
   vpc_id              = aws_vpc.k8s_vpc.id
   service_name        = each.value
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [aws_security_group.ssm_https.id]
   private_dns_enabled = true
   ip_address_type     = "ipv4"
-  subnet_ids          = sort([for subnet in aws_subnet.public : subnet.id])
+
+  security_group_ids = [aws_security_group.ssm_https.id]
+  subnet_ids         = sort([for subnet in aws_subnet.public : subnet.id])
+
 
   depends_on = [aws_subnet.public]
 }
