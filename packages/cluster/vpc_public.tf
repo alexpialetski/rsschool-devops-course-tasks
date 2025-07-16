@@ -9,7 +9,7 @@ resource "aws_subnet" "public" {
   count = local.number_of_public_subnets
 
   vpc_id            = aws_vpc.k8s_vpc.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, local.number_of_public_subnets + count.index)
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   map_public_ip_on_launch = true # This makes public subnet

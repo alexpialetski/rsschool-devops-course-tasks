@@ -16,10 +16,10 @@
       }
     },
     "terraform-plan": {
+      "defaultConfiguration": "dev",
       "configurations": {
-        "defaultConfiguration": "dev",
         "dev": {
-          "args": ["-var-file=./tfvars/stable.tfvars"]
+          "args": ["-var-file=./tfvars/dev.tfvars"]
         },
         "stable": {
           "args": ["-var-file=./tfvars/stable.tfvars"]
