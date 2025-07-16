@@ -74,6 +74,7 @@
     },
     "terraform-destroy": {
       "executor": "nx:run-commands",
+      "dependsOn": ["terraform-init"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "terraform destroy -auto-approve"
