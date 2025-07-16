@@ -21,9 +21,10 @@ resource "aws_route_table" "private" {
 
   vpc_id = aws_vpc.k8s_vpc.id
 
+  # Route to NAT instance for internet access 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.natgateway[count.index].id
+    cidr_block           = "0.0.0.0/0"
+    network_interface_id = aws_instance.nat_instance[count.index].primary_network_interface_id
   }
 
   tags = {
@@ -49,22 +50,6 @@ resource "aws_security_group" "node_security_group" {
   ############################
   # INGRESS RULES
   ############################
-
-  # ingress {
-  #   description     = "Allow incoming HTTP connections from Load Balancer"
-  #   from_port       = 80
-  #   to_port         = 80
-  #   protocol        = "tcp"
-  #   security_groups = [aws_security_group.aws-sg-load-balancer.id]
-  # }
-
-  # ingress {
-  #   description     = "Allow incoming HTTPS connections from Load Balancer"
-  #   from_port       = 443
-  #   to_port         = 443
-  #   protocol        = "tcp"
-  #   security_groups = [aws_security_group.aws-sg-load-balancer.id]
-  # }
 
   ingress {
     description = "Allow incoming SSH connections from nodes in the same cluster"
