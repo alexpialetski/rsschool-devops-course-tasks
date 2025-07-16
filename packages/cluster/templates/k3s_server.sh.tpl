@@ -1,5 +1,6 @@
 #!/bin/bash
 
+${ssm_start}
 ${ssh_setup}
 ${k3s_token}
 

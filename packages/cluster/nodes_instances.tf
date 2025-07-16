@@ -2,16 +2,6 @@
 # Control Plane and Agent Nodes
 ################################################################################
 
-data "aws_ami" "amazon_linux_2023" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
-  }
-}
-
 resource "aws_launch_template" "k8s_node" {
   name_prefix            = "${local.naming_prefix}-node-"
   image_id               = data.aws_ami.amazon_linux_2023.id
@@ -39,6 +29,9 @@ resource "aws_instance" "control_plane_node" {
     version = "$Latest"
   }
 
+  # needed for installing k3s from internet 
+  depends_on = [aws_instance.nat_instance]
+
   tags = {
     Name = "${local.naming_prefix}-control-plane-${count.index + 1}"
   }
@@ -55,6 +48,9 @@ resource "aws_instance" "agent_node" {
     id      = aws_launch_template.k8s_node.id
     version = "$Latest"
   }
+
+  # needed for installing k3s from internet 
+  depends_on = [aws_instance.nat_instance]
 
   tags = {
     Name = "${local.naming_prefix}-agent-${count.index + 1}"

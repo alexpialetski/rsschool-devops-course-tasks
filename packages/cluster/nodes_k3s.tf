@@ -1,3 +1,11 @@
+data "template_file" "ssm_start" {
+  template = file("${path.module}/templates/ssm_start.sh.tpl")
+}
+
+#################################################################################
+# K3S token management
+#################################################################################
+
 resource "random_password" "k3s_token" {
   length  = 48
   special = false
@@ -23,9 +31,14 @@ data "template_file" "k3s_token" {
   }
 }
 
+#################################################################################
+# K3S Server and Agent Configuration for ec2 instances
+#################################################################################
+
 data "template_file" "k3s_server" {
   template = file("${path.module}/templates/k3s_server.sh.tpl")
   vars = {
+    ssm_start = data.template_file.ssm_start.rendered
     ssh_setup = data.template_file.ssh_setup.rendered
     k3s_token = data.template_file.k3s_token.rendered
   }
@@ -34,6 +47,7 @@ data "template_file" "k3s_server" {
 data "template_file" "k3s_agent" {
   template = file("${path.module}/templates/k3s_agent.sh.tpl")
   vars = {
+    ssm_start        = data.template_file.ssm_start.rendered
     ssh_setup        = data.template_file.ssh_setup.rendered
     k3s_token        = data.template_file.k3s_token.rendered
     control_plane_ip = aws_instance.control_plane_node[0].private_ip
