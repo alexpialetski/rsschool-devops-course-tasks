@@ -10,10 +10,6 @@ variable "availability_zones_config" {
     public  = number
     private = number
   })
-  default = {
-    public  = 1
-    private = 1
-  }
 
   validation {
     condition     = var.availability_zones_config.public >= 1
@@ -31,10 +27,6 @@ variable "control_plane_config" {
     nodesNumber  = number
     instanceType = string
   })
-  default = {
-    nodesNumber  = 1
-    instanceType = "t3.small"
-  }
 
   validation {
     condition     = var.control_plane_config.nodesNumber == 1
@@ -56,10 +48,6 @@ variable "agent_nodes_config" {
     nodesNumber  = number
     instanceType = string
   })
-  default = {
-    nodesNumber  = 1
-    instanceType = "t3.micro"
-  }
 
   validation {
     condition     = var.agent_nodes_config.nodesNumber >= 1

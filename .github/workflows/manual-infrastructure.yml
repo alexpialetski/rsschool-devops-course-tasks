@@ -65,7 +65,12 @@ jobs:
               ;;
             "apply")
               echo "Applying ${{ github.event.inputs.project }}..."
-              npx nx run ${{ github.event.inputs.project }}:terraform-apply --configuration=stable
+              CONFIGURATION=${{ github.event.inputs.environment }}
+              if [ "$CONFIGURATION" == "dev" ]; then
+                npx nx run ${{ github.event.inputs.project }}:terraform-apply
+              else
+                npx nx run ${{ github.event.inputs.project }}:terraform-apply --configuration=stable
+              fi
               ;;
             "destroy")
               echo "Destroying ${{ github.event.inputs.project }}..."
