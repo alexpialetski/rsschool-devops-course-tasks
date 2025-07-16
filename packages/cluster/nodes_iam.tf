@@ -1,5 +1,5 @@
 resource "aws_iam_role" "k8s_node" {
-  name = "K8sNodeRole"
+  name = "${local.naming_prefix}-k8s-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
