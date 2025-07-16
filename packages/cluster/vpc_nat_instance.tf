@@ -85,11 +85,10 @@ resource "aws_eip" "nat_instance_eip" {
 
 # Associate Elastic IP with NAT Instance
 resource "aws_eip_association" "nat_instance_eip_association" {
+  count = length(aws_eip.nat_instance_eip)
 
-  for_each = aws_eip.nat_instance_eip
-
-  instance_id   = aws_instance.nat_instance[each.key].id
-  allocation_id = each.value.id
+  instance_id   = aws_instance.nat_instance[count.index].id
+  allocation_id = aws_eip.nat_instance_eip[count.index].id
 }
 
 ################################################################################

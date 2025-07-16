@@ -9,8 +9,9 @@ locals {
 resource "aws_subnet" "private" {
   count = local.number_of_private_subnets
 
-  vpc_id            = aws_vpc.k8s_vpc.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
+  vpc_id = aws_vpc.k8s_vpc.id
+  # shifting the CIDR block to avoid overlap with public subnets
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, local.number_of_public_subnets + count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   map_public_ip_on_launch = false # This makes private subnet
