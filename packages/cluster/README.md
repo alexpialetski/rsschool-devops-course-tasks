@@ -20,15 +20,30 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 #### VPC and Subnets (`networking_vpc.tf`)
 
 - **VPC**: Custom VPC with DNS support enabled
-- **Public Subnets**: For load balancer and NAT gateway
+- **Public Subnets**: For load balancer and NAT instance
 - **Private Subnets**: For K3s nodes (secure placement)
 - **Availability Zones**: Configurable count for high availability
 
-#### NAT Gateway (`networking_nat_gateway.tf`)
+#### NAT Instance (`networking_nat_gateway.tf`)
 
-- **Purpose**: Internet access for private subnet resources
+- **Purpose**: Internet access for private subnet resources (cost-effective NAT solution)
 - **Placement**: In public subnets with Elastic IP addresses
+- **Instance Type**: Configurable (default: t3.micro for cost optimization)
 - **Routing**: Configured for private subnet internet access
+- **Access**: Instances accessed via SSM (no SSH access configured)
+- **Security**: Allows traffic from private subnets only
+
+##### NAT Instance vs NAT Gateway
+
+**Benefits of NAT Instance:**
+- **Cost-effective**: ~$3.50/month (t3.micro) vs ~$32/month (NAT Gateway)
+- **Customizable**: Full control over instance configuration
+- **Monitoring**: Standard EC2 monitoring and logging capabilities
+
+**Trade-offs:**
+- **Availability**: Single point of failure (mitigated by fault-tolerant architecture)
+- **Maintenance**: Requires OS updates and monitoring
+- **Performance**: Lower throughput compared to NAT Gateway
 
 #### VPC Endpoints (`networking_vpc.tf`)
 
