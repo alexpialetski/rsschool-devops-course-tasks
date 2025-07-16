@@ -27,6 +27,6 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
 }
 
 resource "aws_iam_instance_profile" "k8s_node" {
-  name = "K8sNodeInstanceProfile"
+  name = "${local.naming_prefix}-k8s-node-profile"
   role = aws_iam_role.k8s_node.name
 }
