@@ -8,14 +8,14 @@ curl -sfL https://get.k3s.io | sh -s - server --token $TOKEN --write-kubeconfig-
 K3S_KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
 
 # Wait for kubeconfig to be generated
-whiel [! -f "${K3S_KUBECONFIG}" ]; do
+while [ ! -f "$K3S_KUBECONFIG" ]; do
     echo "Waiting for kubeconfig to be generated..."
     sleep 5
 done
 
 aws secretsmanager put-secret-value \
     --secret-id "${secret_name}" \
-    --secret-string "$(cat ${K3S_KUBECONFIG})" \
+    --secret-string "$(cat $K3S_KUBECONFIG)" \
     --region ${aws_region}
 
 if [ $? -eq 0 ]; then
