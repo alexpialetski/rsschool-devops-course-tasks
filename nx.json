@@ -58,6 +58,7 @@
     "terraform-fmt": {
       "cache": true,
       "executor": "nx:run-commands",
+      "inputs": ["terraform-files"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "terraform fmt -write=true"
@@ -67,6 +68,7 @@
       "cache": true,
       "executor": "nx:run-commands",
       "dependsOn": ["terraform-init"],
+      "inputs": ["terraform-all"],
       "options": {
         "cwd": "{projectRoot}",
         "command": "terraform validate"
