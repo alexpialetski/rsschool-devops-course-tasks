@@ -49,12 +49,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Terraform Environment
-        uses: ./.github/actions/setup-terraform
+      - name: Setup Node.js and AWS
+        id: node-aws-setup
+        uses: ./.github/actions/setup-node-aws
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform Environment
+        uses: ./.github/actions/setup-terraform
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-account-id: ${{ steps.node-aws-setup.outputs.aws-account-id }}
 
       - name: Execute Terraform Action
         run: |
