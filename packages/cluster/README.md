@@ -109,7 +109,7 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "availability_zones_count" {
+variable "availability_zones_config" {
   description = "Number of availability zones"
   type        = number
   default     = 1
@@ -153,10 +153,13 @@ variable "agent_nodes_config" {
 #### Stable Environment (`tfvars/stable.tfvars`)
 
 ```hcl
-availability_zones_count = 2
+availability_zones_config = {
+  public  = 1
+  private = 2
+}
 control_plane_config = {
   nodesNumber  = 1
-  instanceType = "t3.medium"
+  instanceType = "t3.small"
 }
 agent_nodes_config = {
   nodesNumber  = 2

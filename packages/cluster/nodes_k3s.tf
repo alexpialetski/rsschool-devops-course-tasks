@@ -1,5 +1,34 @@
+locals {
+  temp_kubeconfig_value = "placeholder"
+}
+
 data "template_file" "ssm_start" {
   template = file("${path.module}/templates/ssm_start.sh.tpl")
+}
+
+#################################################################################
+# Secrets Manager for kubeconfig storage
+#################################################################################
+
+resource "aws_secretsmanager_secret" "k3s_kubeconfig" {
+  name        = "${local.naming_prefix}-k3s-kubeconfig"
+  description = "K3s cluster kubeconfig with certificates"
+
+  # To delete secret without a scheduled time (i.e., immediately),
+  recovery_window_in_days = 0
+
+  tags = {
+    Name = "${local.naming_prefix}-k3s-kubeconfig"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "k3s_kubeconfig" {
+  secret_id     = aws_secretsmanager_secret.k3s_kubeconfig.id
+  secret_string = local.temp_kubeconfig_value # This will be updated by the k3s server instance
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 #################################################################################
@@ -38,9 +67,11 @@ data "template_file" "k3s_token" {
 data "template_file" "k3s_server" {
   template = file("${path.module}/templates/k3s_server.sh.tpl")
   vars = {
-    ssm_start = data.template_file.ssm_start.rendered
-    ssh_setup = data.template_file.ssh_setup.rendered
-    k3s_token = data.template_file.k3s_token.rendered
+    ssm_start   = data.template_file.ssm_start.rendered
+    ssh_setup   = data.template_file.ssh_setup.rendered
+    k3s_token   = data.template_file.k3s_token.rendered
+    secret_name = aws_secretsmanager_secret.k3s_kubeconfig.name
+    aws_region  = data.aws_region.current.id
   }
 }
 
