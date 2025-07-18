@@ -31,11 +31,12 @@ resource "aws_instance" "control_plane_node" {
     version = "$Latest"
   }
 
-  # needed for installing k3s from internet 
+  # needed for installing k3s from internet
   depends_on = [aws_instance.nat_instance]
 
   tags = {
-    Name = "${local.naming_prefix}-control-plane-${count.index + 1}"
+    Name     = "${local.naming_prefix}-control-plane-${count.index + 1}",
+    NodeType = "control-plane",
   }
 }
 
@@ -53,10 +54,11 @@ resource "aws_instance" "agent_node" {
     version = "$Latest"
   }
 
-  # needed for installing k3s from internet 
+  # needed for installing k3s from internet
   depends_on = [aws_instance.nat_instance]
 
   tags = {
-    Name = "${local.naming_prefix}-agent-${count.index + 1}"
+    Name     = "${local.naming_prefix}-agent-${count.index + 1}",
+    NodeType = "agent",
   }
 }
