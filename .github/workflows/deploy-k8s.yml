@@ -43,8 +43,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Terraform Environment
-        uses: ./.github/actions/setup-terraform
+      - name: Setup Node.js and AWS
+        id: setup-node-aws
+        uses: ./.github/actions/setup-node-aws
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -52,7 +53,8 @@ jobs:
 
       - name: Connect to K3s Cluster
         run: |
-          npx nx run local:connect-kubectl
+          # Use environment from input or default to 'dev'
+          npx nx run local:connect-kubectl -- --workspace $TF_WORKSPACE
           # Export kubeconfig for subsequent steps
           echo "KUBECONFIG=$PWD/packages/local/kubeconfig" >> $GITHUB_ENV
 
@@ -114,3 +116,4 @@ jobs:
         if: always()
         run: |
           npx nx run local:disconnect-kubectl
+          echo "✅ [INFO] K3s connection cleanup completed"
