@@ -28,16 +28,10 @@
     },
     "connect-kubectl": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        {
-          "projects": ["cluster"],
-          "target": "terraform-output"
-        }
-      ],
       "outputs": ["{projectRoot}/kubeconfig", "{projectRoot}/k3s-session.json"],
       "options": {
         "command": "bash ./connect-kubectl.sh",
-        "args": ["6443"],
+        "args": ["--port", "6443"],
         "cwd": "{projectRoot}"
       }
     },
