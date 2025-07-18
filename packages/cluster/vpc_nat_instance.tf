@@ -1,57 +1,11 @@
-################################################################################
-# Public Subnet
-################################################################################
-resource "aws_subnet" "public" {
-  count = var.availability_zones_count
-
-  vpc_id            = aws_vpc.k8s_vpc.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, var.availability_zones_count + count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  map_public_ip_on_launch = true # This makes public subnet
-
-  tags = {
-    Name = "${local.naming_prefix}-public-subnet-${count.index}"
-  }
-}
-
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.k8s_vpc.id
-
-  tags = {
-    Name = "${local.naming_prefix}-igw"
-  }
-}
-
-################################################################################
-# Public Route Table for internet access
-################################################################################
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.k8s_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
-  tags = {
-    Name = "${local.naming_prefix}-public-rtable"
-  }
-}
-
-resource "aws_route_table_association" "public_rt_association" {
-  count = length(aws_subnet.public)
-
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+locals {
+  number_of_nat_instances = local.number_of_public_subnets
 }
 
 ################################################################################
 # NAT Instance Security Group
 ################################################################################
 
-# Security Group for NAT Instance
 resource "aws_security_group" "nat_instance_sg" {
   name        = "${local.naming_prefix}-nat-instance-sg"
   description = "Security group for NAT instance"
@@ -118,11 +72,11 @@ resource "aws_iam_instance_profile" "nat_instance_profile" {
 }
 
 ################################################################################
-# NAT Instance Configuration
+# Elastic IP for NAT Instance
 ################################################################################
 
 resource "aws_eip" "nat_instance_eip" {
-  count = var.availability_zones_count
+  count = local.number_of_nat_instances
 
   tags = {
     Name = "${local.naming_prefix}-nat-instance-eip-${count.index}"
@@ -131,11 +85,15 @@ resource "aws_eip" "nat_instance_eip" {
 
 # Associate Elastic IP with NAT Instance
 resource "aws_eip_association" "nat_instance_eip_association" {
-  count = var.availability_zones_count
+  count = length(aws_eip.nat_instance_eip)
 
   instance_id   = aws_instance.nat_instance[count.index].id
   allocation_id = aws_eip.nat_instance_eip[count.index].id
 }
+
+################################################################################
+# NAT Instance Configuration
+################################################################################
 
 
 data "template_file" "nat_forwarding" {
@@ -143,7 +101,7 @@ data "template_file" "nat_forwarding" {
 }
 
 resource "aws_instance" "nat_instance" {
-  count = var.availability_zones_count
+  count = local.number_of_nat_instances
 
   ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = "t3.micro"

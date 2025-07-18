@@ -1,4 +1,7 @@
-availability_zones_count=2
+availability_zones_config = {
+  public  = 1
+  private = 2
+}
 control_plane_config = {
   nodesNumber  = 1
   instanceType = "t3.small"

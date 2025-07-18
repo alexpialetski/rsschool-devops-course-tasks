@@ -4,26 +4,29 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "availability_zones_count" {
-  description = "Number of availability zones to use for redundancy"
-  type        = number
-  default     = 1
+variable "availability_zones_config" {
+  description = "Configuration for number of availability zones for public and private subnets"
+  type = object({
+    public  = number
+    private = number
+  })
 
   validation {
-    condition     = var.availability_zones_count >= 1
-    error_message = "At least 1 AZs are required for high availability."
+    condition     = var.availability_zones_config.public >= 1
+    error_message = "At least 1 public AZ is required."
+  }
+  validation {
+    condition     = var.availability_zones_config.private >= 1
+    error_message = "At least 1 private AZ is required."
   }
 }
+
 variable "control_plane_config" {
   description = "Configuration for Kubernetes control plane nodes"
   type = object({
     nodesNumber  = number
     instanceType = string
   })
-  default = {
-    nodesNumber  = 1
-    instanceType = "t3.small"
-  }
 
   validation {
     condition     = var.control_plane_config.nodesNumber == 1
@@ -45,10 +48,6 @@ variable "agent_nodes_config" {
     nodesNumber  = number
     instanceType = string
   })
-  default = {
-    nodesNumber  = 2
-    instanceType = "t3.micro"
-  }
 
   validation {
     condition     = var.agent_nodes_config.nodesNumber >= 1

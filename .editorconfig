@@ -1,0 +1,35 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Matches multiple files with brace expansion notation
+[*.{js,ts,json,md,yml,yaml,sh,bash,tf,tpl,env}]
+indent_style = space
+indent_size = 2
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 4
+
+# Terraform files
+[*.tf]
+indent_style = space
+indent_size = 2
+
+# Matches the exact files
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2

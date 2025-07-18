@@ -16,16 +16,31 @@
       }
     },
     "terraform-plan": {
+      "defaultConfiguration": "dev",
       "configurations": {
+        "dev": {
+          "args": ["-var-file=./tfvars/dev.tfvars"]
+        },
         "stable": {
           "args": ["-var-file=./tfvars/stable.tfvars"]
         }
       }
     },
     "terraform-apply": {},
-    "terraform-destroy": {},
+    "terraform-destroy": {
+      "defaultConfiguration": "dev",
+      "configurations": {
+        "dev": {
+          "args": ["-var-file=./tfvars/dev.tfvars"]
+        },
+        "stable": {
+          "args": ["-var-file=./tfvars/stable.tfvars"]
+        }
+      }
+    },
     "terraform-fmt": {},
-    "terraform-validate": {}
+    "terraform-validate": {},
+    "terraform-output": {}
   },
   "tags": ["infrastructure", "terraform"]
 }
