@@ -1,7 +1,3 @@
-locals {
-  temp_kubeconfig_value = "placeholder"
-}
-
 data "template_file" "ssm_start" {
   template = file("${path.module}/templates/ssm_start.sh.tpl")
 }
@@ -11,20 +7,20 @@ data "template_file" "ssm_start" {
 #################################################################################
 
 resource "aws_secretsmanager_secret" "k3s_kubeconfig" {
-  name        = "${local.naming_prefix}-k3s-kubeconfig"
   description = "K3s cluster kubeconfig with certificates"
 
   # To delete secret without a scheduled time (i.e., immediately),
   recovery_window_in_days = 0
 
   tags = {
-    Name = "${local.naming_prefix}-k3s-kubeconfig"
+    Name       = "${local.naming_prefix}-k3s-kubeconfig",
+    SecretType = "kubeconfig",
   }
 }
 
 resource "aws_secretsmanager_secret_version" "k3s_kubeconfig" {
   secret_id     = aws_secretsmanager_secret.k3s_kubeconfig.id
-  secret_string = local.temp_kubeconfig_value # This will be updated by the k3s server instance
+  secret_string = "" # This will be updated by the k3s server instance
 
   lifecycle {
     ignore_changes = [secret_string]
@@ -41,11 +37,15 @@ resource "random_password" "k3s_token" {
 }
 
 resource "aws_secretsmanager_secret" "k3s_token" {
-  name        = "${local.naming_prefix}-k3s-cluster-token"
   description = "K3s cluster token for node authentication"
 
   # To delete secret without a scheduled time (i.e., immediately),
   recovery_window_in_days = 0
+
+  tags = {
+    Name       = "${local.naming_prefix}-k3s-cluster-token",
+    SecretType = "token",
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "k3s_token" {
