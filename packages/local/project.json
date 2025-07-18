@@ -25,7 +25,30 @@
       "options": {
         "command": "bash ./{projectRoot}/configure_github_secrets.sh"
       }
+    },
+    "connect-kubectl": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "projects": ["cluster"],
+          "target": "terraform-output"
+        }
+      ],
+      "outputs": ["{projectRoot}/kubeconfig", "{projectRoot}/k3s-session.json"],
+      "options": {
+        "command": "bash ./connect-kubectl.sh",
+        "args": ["6443"],
+        "cwd": "{projectRoot}"
+      }
+    },
+    "disconnect-kubectl": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "bash ./disconnect-kubectl.sh",
+        "cwd": "{projectRoot}"
+      }
     }
   },
-  "tags": ["development", "bash"]
+  "tags": ["development", "bash", "kubernetes"]
 }

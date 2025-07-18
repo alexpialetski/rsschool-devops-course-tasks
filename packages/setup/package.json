@@ -1,0 +1,11 @@
+{
+  "name": "setup",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf terraform.tfstate.d tfplan"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.10"
+  }
+}

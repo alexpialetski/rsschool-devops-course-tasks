@@ -1,3 +1,7 @@
+locals {
+  temp_kubeconfig_value = "placeholder"
+}
+
 data "template_file" "ssm_start" {
   template = file("${path.module}/templates/ssm_start.sh.tpl")
 }
@@ -20,7 +24,7 @@ resource "aws_secretsmanager_secret" "k3s_kubeconfig" {
 
 resource "aws_secretsmanager_secret_version" "k3s_kubeconfig" {
   secret_id     = aws_secretsmanager_secret.k3s_kubeconfig.id
-  secret_string = "placeholder" # Will be updated by the k3s server instance
+  secret_string = local.temp_kubeconfig_value # This will be updated by the k3s server instance
 
   lifecycle {
     ignore_changes = [secret_string]
