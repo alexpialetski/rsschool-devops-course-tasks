@@ -24,7 +24,14 @@
       ]
     },
     "terraform-fmt": {},
-    "terraform-validate": {}
+    "terraform-validate": {},
+    "terraform-clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run clean",
+        "cwd": "{projectRoot}"
+      }
+    }
   },
   "tags": ["infrastructure", "terraform"]
 }

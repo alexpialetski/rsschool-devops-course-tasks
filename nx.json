@@ -81,6 +81,15 @@
         "cwd": "{projectRoot}",
         "command": "terraform destroy -auto-approve"
       }
+    },
+    "terraform-output": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["terraform-init"],
+      "outputs": ["{projectRoot}/terraform-outputs.env"],
+      "options": {
+        "command": "terraform output -json | jq -r \"to_entries[] | \\\"\\(.key)=\\(.value.value)\\\"\" > terraform-outputs.env",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "nxCloudId": "686e975426cf276f670bc399"

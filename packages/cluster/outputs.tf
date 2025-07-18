@@ -4,6 +4,11 @@ output "k3s_kubeconfig_secret_name" {
 }
 
 output "control_plane_instance_ids" {
-  value       = aws_instance.control_plane_node[*].id
+  value       = aws_instance.control_plane_node[0].id
   description = "List of instance IDs for control plane nodes"
+}
+
+output "temp_kubeconfig_value" {
+  value       = local.temp_kubeconfig_value
+  description = "Temporary kubeconfig value placeholder, will be updated by the k3s server instance"
 }
