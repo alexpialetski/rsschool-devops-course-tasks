@@ -42,6 +42,13 @@
         "command": "bash ./disconnect-kubectl.sh",
         "cwd": "{projectRoot}"
       }
+    },
+    "update-docs-prompt": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./update-docs-prompt.sh",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "tags": ["development", "bash", "kubernetes"]
