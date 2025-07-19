@@ -8,10 +8,11 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 
 - **VPC Infrastructure** with public and private subnets across multiple AZs
 - **K3s Cluster** with control plane and agent nodes
-- **Load Balancer** (WIP) for external access and high availability
+- **NAT Instance** for cost-effective internet access in private subnets
 - **Security Groups** with proper network controls
-- **IAM Roles** for AWS service integration
+- **IAM Roles** with resource tagging for service discovery
 - **VPC Endpoints** for secure AWS service access
+- **Secrets Management** for K3s tokens and kubeconfig
 
 ## 🏗️ Infrastructure Components
 
@@ -24,28 +25,30 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 - **Private Subnets**: For K3s nodes (secure placement)
 - **Availability Zones**: Configurable count for high availability
 
-#### NAT Instance (`networking_nat_gateway.tf`)
+#### NAT Instance (`vpc_nat_instance.tf`)
 
-- **Purpose**: Internet access for private subnet resources (cost-effective NAT solution)
+- **Purpose**: Cost-effective internet access for private subnet resources
 - **Placement**: In public subnets with Elastic IP addresses
 - **Instance Type**: Configurable (default: t3.micro for cost optimization)
 - **Routing**: Configured for private subnet internet access
-- **Access**: Instances accessed via SSM (no SSH access configured)
+- **Access**: Instances accessed via SSM (no SSH access required)
 - **Security**: Allows traffic from private subnets only
 
 ##### NAT Instance vs NAT Gateway
 
 **Benefits of NAT Instance:**
+
 - **Cost-effective**: ~$3.50/month (t3.micro) vs ~$32/month (NAT Gateway)
 - **Customizable**: Full control over instance configuration
 - **Monitoring**: Standard EC2 monitoring and logging capabilities
 
 **Trade-offs:**
+
 - **Availability**: Single point of failure (mitigated by fault-tolerant architecture)
 - **Maintenance**: Requires OS updates and monitoring
 - **Performance**: Lower throughput compared to NAT Gateway
 
-#### VPC Endpoints (`networking_vpc.tf`)
+#### VPC Endpoints (`vpc_endpoints.tf`)
 
 - **SSM Endpoints**: For secure instance management
 - **Services**: EC2 Messages, SSM, SSM Messages
@@ -55,17 +58,16 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 
 #### EC2 Instances (`nodes_instances.tf`)
 
-- **Control Plane**: 1 t3.medium instance (configurable)
-- **Agent Nodes**: 2 t3.micro instances (configurable)
+- **Control Plane**: 1 instance (configurable count and type)
+- **Agent Nodes**: 2 instances (configurable count and type)
 - **Placement**: Private subnets across multiple AZs
 - **AMI**: Latest Amazon Linux 2 AMI
+- **Tagging**: Comprehensive resource tags for service discovery
 
 #### Load Balancer (WIP) (`nodes_load_balancer.tf`)
 
-- **Type**: Application Load Balancer (ALB)
-- **Placement**: Public subnets for external access
-- **Target Groups**: Health checks for K3s API server
-- **Listeners**: HTTPS/HTTP forwarding to K3s API
+- **Type**: Application Load Balancer (ALB) - planned for future implementation
+- **Purpose**: External access and high availability for K3s API server
 
 ### Security Infrastructure
 
@@ -78,15 +80,16 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 
 #### IAM Roles (`nodes_iam.tf`)
 
-- **EC2 Instance Role**: For AWS service access
-- **SSM Permissions**: For instance management
-- **ECR Permissions (WIP)**: For container image access (if needed)
+- **EC2 Instance Role**: For AWS service access with workspace-specific naming
+- **SSM Permissions**: For instance management and secure access
+- **Resource Tagging**: Enables service discovery by external tools
 
 ### K3s Configuration
 
 #### K3s Server (`nodes_k3s.tf`)
 
-- **Token Management**: Stored in AWS Secrets Manager
+- **Token Management**: Stored in AWS Secrets Manager with proper tagging
+- **Kubeconfig Storage**: Automatically stored as AWS secret for external access
 - **Installation**: Automated via user data scripts
 - **Configuration**: Embedded etcd, API server binding
 
@@ -96,59 +99,7 @@ The cluster package creates a complete K3s Kubernetes cluster with:
 - **Token Retrieval**: From AWS Secrets Manager
 - **Configuration**: Container runtime and networking
 
-## 🔧 Configuration
-
-### Variables (`variables.tf`)
-
-#### VPC Configuration
-
-```hcl
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "availability_zones_config" {
-  description = "Number of availability zones"
-  type        = number
-  default     = 1
-}
-```
-
-#### Control Plane Configuration
-
-```hcl
-variable "control_plane_config" {
-  description = "Configuration for control plane nodes"
-  type = object({
-    nodesNumber  = number
-    instanceType = string
-  })
-  default = {
-    nodesNumber  = 1
-    instanceType = "t3.medium"
-  }
-}
-```
-
-#### Agent Nodes Configuration
-
-```hcl
-variable "agent_nodes_config" {
-  description = "Configuration for agent nodes"
-  type = object({
-    nodesNumber  = number
-    instanceType = string
-  })
-  default = {
-    nodesNumber  = 2
-    instanceType = "t3.micro"
-  }
-}
-```
-
-### Environment-Specific Configuration
+## 🔧 Environment-Specific Configuration
 
 #### Stable Environment (`tfvars/stable.tfvars`)
 
@@ -184,8 +135,10 @@ agent_nodes_config = {
 
 ### Secrets Management
 
-- **K3s Token**: Stored in AWS Secrets Manager
-- **Encryption**: At-rest encryption for secrets
+- **K3s Token**: Stored in AWS Secrets Manager with workspace-specific naming
+- **Kubeconfig**: Automatically generated and stored as AWS secret
+- **SSH Keys**: Inter-node communication keys stored as secrets
+- **Encryption**: At-rest encryption for all secrets
 
 ## 🔄 Dependencies
 
@@ -198,12 +151,13 @@ agent_nodes_config = {
 
 ### Cluster Information
 
-- **Load Balancer DNS (WIP)**: External access endpoint
+- **Control Plane Instances**: Instance IDs with proper tagging for service discovery
+- **Kubeconfig Secret**: AWS Secrets Manager secret name for external access
 
 ### Access Information
 
-- **API Server (WIP)**: Accessible via load balancer
-- **Node IPs (WIP)**: Private IP addresses
+- **API Server**: Accessible via SSM port forwarding (no public access)
+- **Instance Management**: Via AWS Systems Manager (no SSH keys required)
 
 ## 🛠️ Troubleshooting
 
@@ -214,14 +168,9 @@ agent_nodes_config = {
    - **Cause**: Setup package not applied
    - **Solution**: Run `npx nx run setup:terraform-apply` first
 
-2. **K3s Cluster Not Ready**
-
-   - **Cause**: Network connectivity or token issues
-   - **Solution**: Check security groups and secrets manager
-
-3. **Load Balancer Health Check Failures**
-   - **Cause**: K3s API server not accessible
-   - **Solution**: Verify security groups and K3s configuration
+2. **K3s Connection Issues**
+   - **Cause**: Network connectivity or secrets access issues
+   - **Solution**: Check security groups, VPC endpoints, and secrets manager permissions
 
 ## 📈 Monitoring and Observability (WIP)
 

@@ -25,6 +25,7 @@ The infrastructure consists of three main components:
 
 1. **Create AWS Credentials File**
    Create a `.keys` file in the root directory:
+
    ```bash
    # .keys file content
    AWS_ACCESS_KEY_ID=your-access-key-id
@@ -32,20 +33,22 @@ The infrastructure consists of three main components:
    ```
 
 2. **Run Automated Setup**
+
    ```bash
    # Install dependencies
    npm install
-   
+
    # Configure AWS CLI and environment
    npx nx run local:configure_env_file
    npx nx run local:configure_github_secrets
    ```
 
 3. **Deploy Infrastructure**
+
    ```bash
    # Source environment variables
    source .env
-   
+
    # Deploy backend and cluster
    npx nx run setup:terraform-apply
    npx nx run cluster:terraform-apply
@@ -54,12 +57,14 @@ The infrastructure consists of three main components:
 #### Option 2: Manual Setup (Traditional Method)
 
 1. **AWS Credentials**
+
    ```bash
    aws configure
    ```
 
 2. **Environment Variables**
    Create a `.env` file in the root directory:
+
    ```bash
    TF_VAR_region=us-east-1
    TF_VAR_account_id=012345678901
@@ -76,6 +81,7 @@ The infrastructure consists of three main components:
 When switching to a new AWS account or resetting credentials:
 
 1. **Update Credentials**
+
    ```bash
    # Update .keys file with new credentials
    vim .keys
@@ -87,25 +93,6 @@ When switching to a new AWS account or resetting credentials:
    npx nx run local:configure_env_file
    npx nx run local:configure_github_secrets
    ```
-
-
-## 🌐 Deployment
-
-### Automated Deployment (CI/CD)
-
-The repository includes three GitHub Actions workflows:
-
-1. **CI/CD Pipeline** (`ci.yml`) - Automated deployment on push to main branch
-2. **PR Validation** (`pr-validation.yml`) - Validates changes in pull requests
-3. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
-
-### Manual Deployment
-
-Use the GitHub Actions "Manual Infrastructure Management" workflow to:
-
-- Plan infrastructure changes
-- Apply changes to specific environments
-- Destroy infrastructure when needed
 
 ## 📚 Documentation
 
