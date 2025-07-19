@@ -6,11 +6,12 @@ The workflows are designed for scenarios where AWS accounts are temporary (like 
 
 ## 📋 Overview
 
-The CI/CD pipeline consists of three main workflows:
+The CI/CD pipeline consists of four main workflows:
 
-1. **CI/CD Pipeline** (`ci.yml`) - Automated deployment and infrastructure management
-2. **PR Validation** (`pr-validation.yml`) - Pull request validation with security scanning
-3. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
+1. **CI/CD Pipeline** (`ci.yml`) - Automated infrastructure deployment and management
+2. **Deploy K8s** (`deploy-k8s.yml`) - Automated K8s application deployment
+3. **PR Validation** (`pr-validation.yml`) - Pull request validation with security scanning
+4. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
 
 ## 🔧 Required Configuration
 
@@ -80,9 +81,10 @@ Configure these environments in your repository (Settings > Environments):
 - **Purpose**: Infrastructure validation and planning
 - **Steps**:
   1. Checkout code with full history
-  2. Setup Terraform environment (composite action)
-  3. Plan cluster infrastructure with stable configuration
-  4. Upload Terraform plans as artifacts
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Setup Terraform environment (setup-terraform action)
+  4. Plan cluster infrastructure with stable configuration
+  5. Upload Terraform plans as artifacts
 
 #### `deploy` Job
 
@@ -91,19 +93,22 @@ Configure these environments in your repository (Settings > Environments):
 - **Environment**: `production` (manual approval required)
 - **Steps**:
   1. Checkout code
-  2. Setup Terraform environment
-  3. Download Terraform plans
-  4. Apply cluster infrastructure
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Setup Terraform environment (setup-terraform action)
+  4. Download Terraform plans
+  5. Apply cluster infrastructure
 
 #### `cleanup` Job
 
 - **Purpose**: Destroy infrastructure (manual trigger only)
-- **Trigger**: `workflow_dispatch` event
+- **Trigger**: Only runs when `workflow_dispatch` event is triggered
 - **Environment**: `production`
 - **Steps**:
-  1. Setup Terraform environment
-  2. Destroy cluster infrastructure
-  3. Destroy setup infrastructure
+  1. Checkout code
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Setup Terraform environment (setup-terraform action)
+  4. Destroy cluster infrastructure
+  5. Destroy setup infrastructure
 
 ### 2. PR Validation (`pr-validation.yml`)
 
@@ -122,10 +127,11 @@ Configure these environments in your repository (Settings > Environments):
 - **Purpose**: Validate infrastructure changes
 - **Steps**:
   1. Checkout code
-  2. Setup Terraform environment
-  3. Validate cluster configuration
-  4. Plan infrastructure changes
-  5. Comment on PR with plan results (WIP)
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Setup Terraform environment (setup-terraform action)
+  4. Validate cluster configuration
+  5. Plan infrastructure changes
+  6. Comment on PR with plan results (if applicable)
 
 #### `security-scan` Job
 
@@ -135,7 +141,29 @@ Configure these environments in your repository (Settings > Environments):
   - **TFSec**: Terraform security analysis
 - **Output**: Security findings as PR comments
 
-### 3. Manual Infrastructure (`manual-infrastructure.yml`)
+### 3. Deploy K8s (`deploy-k8s.yml`)
+
+**Trigger**:
+
+- Automatic: After successful CI/CD Pipeline completion
+- Manual: `workflow_dispatch` with environment selection
+
+**Jobs**:
+
+#### `deploy-k8s` Job
+
+- **Purpose**: Deploy applications to the K8s cluster
+- **Dependencies**: Successful infrastructure deployment (ci.yml)
+- **Environment**: `production` (manual approval required)
+- **Steps**:
+  1. Checkout code
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Connect to K3s cluster via SSM port forwarding
+  4. Verify cluster connectivity
+  5. Deploy K8s applications
+  6. Cleanup connections
+
+### 4. Manual Infrastructure (`manual-infrastructure.yml`)
 
 **Trigger**: Manual workflow dispatch
 
@@ -153,43 +181,10 @@ Configure these environments in your repository (Settings > Environments):
 - **Environment**: Dynamic based on input
 - **Steps**:
   1. Checkout code
-  2. Setup Terraform environment
-  3. Execute specified Terraform action
-  4. Comment on manual run status
-
-## 🔨 Composite Actions
-
-### `setup-terraform` Action
-
-**Location**: `.github/actions/setup-terraform/action.yml`
-
-**Purpose**: Consolidates common setup steps for all workflows
-
-**Inputs**:
-
-- `aws-access-key-id`: AWS Access Key ID (required)
-- `aws-secret-access-key`: AWS Secret Access Key (required)
-- `aws-region`: AWS Region (required)
-- `node-version`: Node.js version (optional, default: '20')
-- `terraform-version`: Terraform version (optional, default: '~1.8.0')
-- `skip-setup-apply`: Skip setup infrastructure deployment (optional, default: 'false')
-
-**Outputs**:
-
-- `aws-account-id`: AWS Account ID from credentials
-- `aws-region`: AWS Region being used
-
-**Steps**:
-
-1. **Node.js Setup**: Install Node.js with npm caching
-2. **Dependencies**: Install npm dependencies
-3. **Nx Setup**: Configure Nx for affected commands
-4. **Terraform Setup**: Install specified Terraform version
-5. **AWS Configuration**: Set up AWS credentials and environment
-6. **Terraform Variables**: Set TF_VAR_region and TF_VAR_account_id
-7. **Format Check**: Validate Terraform code formatting
-8. **Setup Validation**: Validate setup infrastructure
-9. **Setup Apply**: Deploy setup infrastructure (creates backend)
+  2. Setup Node.js and AWS environment (setup-node-aws action)
+  3. Setup Terraform environment (setup-terraform action)
+  4. Execute specified Terraform action
+  5. Comment on manual run status (if applicable)
 
 ## 🔗 Nx Integration
 
@@ -199,19 +194,8 @@ The workflows leverage Nx workspace features:
 
 - **Project Dependencies**: Setup → Cluster dependency management
 - **Task Caching**: Faster execution with Nx caching
-- **Parallel Execution (WIP)**: Run independent tasks in parallel
-- **Affected Commands (WIP)**: Only process changed projects
-
-### Task Execution
-
-**Terraform Tasks**:
-
-- `terraform-init`: Initialize Terraform with backend
-- `terraform-plan`: Plan infrastructure changes
-- `terraform-apply`: Apply infrastructure changes
-- `terraform-validate`: Validate configuration
-- `terraform-fmt`: Format Terraform code
-- `terraform-destroy`: Destroy infrastructure
+- **Affected Commands**: Process only changed projects in CI
+- **Parallel Execution**: Run independent tasks concurrently
 
 ## 🔐 Security Features
 
@@ -250,9 +234,12 @@ The workflows leverage Nx workspace features:
 
 ## 📚 Related Documentation
 
-- [Setup Package README](../packages/setup/README.md)
-- [Cluster Package README](../packages/cluster/README.md)
-- [Root README](../README.md)
+- [Setup Package README](../../packages/setup/README.md)
+- [Cluster Package README](../../packages/cluster/README.md)
+- [Local Package README](../../packages/local/README.md)
+- [Root README](../../README.md)
+- [Setup Terraform Action](../actions/setup-terraform/README.md)
+- [Setup Node AWS Action](../actions/setup-node-aws/README.md)
 - [Nx Documentation](https://nx.dev/)
 - [Terraform Documentation](https://www.terraform.io/docs)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)

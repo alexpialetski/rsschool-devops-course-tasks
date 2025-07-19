@@ -1,15 +1,14 @@
 # Setup Terraform Composite Action
 
-This composite action provides a standardized way to set up the complete Terraform environment with AWS credentials and Node.js across all workflows.
+This focused composite action sets up the Terraform environment for infrastructure workflows. It assumes Node.js and AWS credentials are already configured.
 
 ## What it does
 
-1. **Checkout**: Checks out the repository code with full history
-2. **Node.js Setup**: Installs Node.js with npm caching enabled
-3. **Dependencies**: Installs npm dependencies using `npm ci`
-4. **Terraform Setup**: Configures Terraform with the specified version
-5. **AWS Authentication**: Sets up AWS credentials for Terraform operations with output enabled
-6. **Environment Variables**: Sets `TF_VAR_region` and `TF_VAR_account_id` automatically from AWS credentials output
+1. **Terraform Setup**: Installs and configures Terraform with the specified version
+2. **Environment Variables**: Sets `TF_VAR_region` and `TF_VAR_account_id` from provided inputs
+3. **Format Check**: Validates Terraform code formatting across all projects
+4. **Setup Validation**: Validates setup infrastructure configuration
+5. **Backend Setup**: Optionally deploys setup infrastructure for Terraform backend
 
 ## Usage
 
@@ -18,50 +17,68 @@ steps:
   - name: Setup Terraform Environment
     uses: ./.github/actions/setup-terraform
     with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       aws-region: ${{ env.AWS_REGION }}
+      aws-account-id: ${{ steps.aws-setup.outputs.aws-account-id }}
 ```
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `aws-access-key-id` | AWS Access Key ID | Yes | - |
-| `aws-secret-access-key` | AWS Secret Access Key | Yes | - |
-| `aws-region` | AWS Region | Yes | - |
-| `node-version` | Node.js version | No | `20` |
-| `terraform-version` | Terraform version | No | `~1.8.0` |
+| Input               | Description                          | Required | Default  |
+| ------------------- | ------------------------------------ | -------- | -------- |
+| `aws-region`        | AWS Region                           | Yes      | -        |
+| `aws-account-id`    | AWS Account ID                       | Yes      | -        |
+| `terraform-version` | Terraform version                    | No       | `~1.8.0` |
+| `skip-setup-apply`  | Skip setup infrastructure deployment | No       | `false`  |
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `aws-account-id` | AWS Account ID retrieved from configure-aws-credentials action |
+| Output       | Description           |
+| ------------ | --------------------- |
 | `aws-region` | AWS Region being used |
 
-## Benefits
+## Prerequisites
 
-- **Consistency**: All workflows use the same setup process
-- **Maintainability**: Single place to update versions and configurations
-- **Reduced Duplication**: Eliminates repetitive setup steps across workflows
-- **Reliability**: Standardized error handling and environment setup
-- **Efficiency**: Uses built-in AWS credentials output instead of separate STS calls
+This action assumes the following are already set up:
+
+- **Node.js environment** with npm dependencies installed
+- **AWS credentials** configured in the environment
+- **Nx workspace** properly configured
+
+## Used By
+
+- **ci.yml**: Main CI/CD pipeline for infrastructure deployment
+- **pr-validation.yml**: Pull request validation workflow
+- **manual-infrastructure.yml**: Manual infrastructure management workflow
 
 ## Example with Outputs
 
 ```yaml
 steps:
-  - name: Setup Terraform Environment
-    id: setup
-    uses: ./.github/actions/setup-terraform
+  # Prerequisites: AWS credentials and Node.js already set up
+  - name: Setup Node.js and AWS
+    uses: ./.github/actions/setup-node-aws
+    id: aws-setup
     with:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       aws-region: ${{ env.AWS_REGION }}
-      
+
+  - name: Setup Terraform Environment
+    id: terraform-setup
+    uses: ./.github/actions/setup-terraform
+    with:
+      aws-region: ${{ env.AWS_REGION }}
+      aws-account-id: ${{ steps.aws-setup.outputs.aws-account-id }}
+
   - name: Use outputs
     run: |
-      echo "AWS Account ID: ${{ steps.setup.outputs.aws-account-id }}"
-      echo "AWS Region: ${{ steps.setup.outputs.aws-region }}"
+      echo "AWS Region: ${{ steps.terraform-setup.outputs.aws-region }}"
 ```
+
+## Benefits
+
+- **Focused**: Dedicated to Terraform environment setup only
+- **Flexible**: Works with different AWS credential setups
+- **Validation**: Ensures code formatting and setup validation
+- **Backend Ready**: Automatically handles Terraform backend deployment
+- **Configurable**: Optional setup deployment for different scenarios

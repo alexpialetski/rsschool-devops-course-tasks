@@ -1,109 +1,39 @@
 # Local Package
 
-The local package provides automation scripts for local development environment setup. It simplifies the process of configuring AWS credentials, environment variables, and GitHub secrets for infrastructure development.
+This package contains automation scripts for local development environment setup and cluster management. It simplifies AWS credential configuration, environment setup, GitHub secrets management, and provides seamless K3s cluster connectivity.
 
 ## 📋 Overview
 
-This package contains three main scripts that work together to set up your local development environment:
-
-1. **`configure_aws.sh`** - Configures AWS CLI from a `.keys` file
-2. **`configure_env_file.sh`** - Generates environment file from AWS configuration
-3. **`configure_github_secrets.sh`** - Updates GitHub repository secrets
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- AWS CLI installed and available in PATH
-- GitHub CLI (`gh`) installed and authenticated
-- Git repository with GitHub remote configured
-
-### Basic Usage
-
-1. **Create a `.keys` file** with your AWS credentials:
-
-   ```bash
-   # .keys file content
-   AWS_ACCESS_KEY_ID=your-access-key-id
-   AWS_SECRET_ACCESS_KEY=your-secret-access-key
-   AWS_DEFAULT_REGION=us-east-1
-   ```
-
-2. **Run the complete setup** using Nx:
-   ```bash
-   npx nx run local:configure_env_file
-   npx nx run local:configure_github_secrets
-   ```
-
-## 🔧 Nx Integration
-
 The local package is configured as an Nx project with the following targets:
 
-### `configure_aws`
+**Environment Setup:**
 
-```bash
-npx nx run local:configure_aws
-```
+- **`configure_aws.sh`** - Configures AWS CLI from a `.keys` file
+- **`configure_env_file.sh`** - Generates environment file from AWS configuration
+- **`configure_github_secrets.sh`** - Updates GitHub repository secrets
 
-- Runs `configure_aws.sh` with `.keys` file from workspace root
-- Default keys file: `{workspaceRoot}/.keys`
+**Cluster Management:**
 
-### `configure_env_file`
+- **`connect-kubectl.sh`** - Establishes secure K3s cluster connection via SSM
 
-```bash
-npx nx run local:configure_env_file
-```
+  - Establishes SSM port forwarding to K3s control plane (remote port 6443)
+  - Retrieves kubeconfig from AWS Secrets Manager using resource tags
+  - Configures kubectl for local access to the K3s cluster
+  - Outputs: kubeconfig and k3s-session.json
 
-- Depends on `configure_aws` target
-- Runs `configure_env_file.sh` with `.env` file in workspace root
-- Default env file: `{workspaceRoot}/.env`
+- **`disconnect-kubectl.sh`** - Cleanly terminates cluster connections
 
-### `configure_github_secrets`
+  - Terminates SSM port forwarding session
+  - Cleans up session files and kubeconfig
 
-```bash
-npx nx run local:configure_github_secrets
-```
+**Utilities:**
 
-- Depends on `configure_aws` target
-- Runs `configure_github_secrets.sh` with no additional arguments
+- **`update-docs-prompt.sh`** - Documentation update automation
 
-### `connect-kubectl`
-
-```bash
-npx nx run local:connect-kubectl
-# or with custom local port
-npx nx run local:connect-kubectl -- 8443
-```
-
-- Depends on `cluster:terraform-output` target
-- Establishes SSM port forwarding to K3s control plane (remote port 6443)
-- Retrieves kubeconfig from AWS Secrets Manager
-- Configures kubectl for local access to the K3s cluster
-- Outputs: `kubeconfig` and `k3s-session.json`
-- Handles Windows and Linux SSM command differences automatically
-- **Parameters**:
-  - `LOCAL_PORT` (optional): Local port to forward to (default: 6443)
-
-### `disconnect-kubectl`
-
-```bash
-npx nx run local:disconnect-kubectl
-```
-
-- Terminates SSM port forwarding session
-- Cleans up session files and kubeconfig
-- Safe to run even if no active session exists
-
-### `test-kubectl-connection`
-
-```bash
-npx nx run local:test-kubectl-connection
-```
-
-- Tests the current kubectl connection to the K3s cluster
-- Validates that kubeconfig and session files exist
-- Runs basic kubectl commands to verify cluster accessibility
-- Useful for troubleshooting connection issues
+  - Generates documentation update prompts based on git history
+  - Analyzes commits since last `readme-checkpoint` tag
+  - Creates structured prompts for AI-assisted documentation updates
+  - Useful for maintaining up-to-date project documentation
 
 ## 🔗 K3s Cluster Connection
 
@@ -111,17 +41,10 @@ The local package provides automated connection to the K3s cluster deployed by t
 
 ### How It Works
 
-1. **Terraform Integration**: Reads cluster outputs (`control_plane_instance_ids` and `k3s_kubeconfig_secret_name`) from the cluster package's terraform state
+1. **Resource Discovery**: Uses AWS resource tags to locate cluster components (no terraform state dependency)
 2. **SSM Port Forwarding**: Establishes secure connection to K3s API server via AWS Systems Manager
 3. **Kubeconfig Setup**: Retrieves and configures kubeconfig from AWS Secrets Manager
 4. **kubectl Ready**: Provides working kubectl configuration for cluster access
-
-### Prerequisites for K3s Connection
-
-- Deployed K3s cluster (run `npx nx run cluster:terraform-apply`)
-- AWS CLI configured with appropriate permissions
-- kubectl installed and available in PATH
-- AWS Session Manager plugin installed
 
 ### Usage Examples
 
@@ -129,62 +52,17 @@ The local package provides automated connection to the K3s cluster deployed by t
 # Connect to K3s cluster (default port 6443)
 npx nx run local:connect-kubectl
 
-# Connect to K3s cluster with custom local port
-npx nx run local:connect-kubectl -- 8443
-
 # Use kubectl (in a new terminal or after export)
 export KUBECONFIG=./packages/local/kubeconfig
 kubectl get nodes
-kubectl get pods --all-namespaces
-
-# Test the connection
-npx nx run local:test-kubectl-connection
 
 # Disconnect when done
 npx nx run local:disconnect-kubectl
 ```
 
-### Direct Script Usage
-
-You can also run the script directly with parameters:
-
-```bash
-# Run script directly with default port
-cd packages/local
-bash connect-kubectl.sh
-
-# Run script with custom port
-bash connect-kubectl.sh 8443
-
-# Show help
-bash connect-kubectl.sh --help
-```
-
-### Windows Usage
-
-For Windows users, the bash scripts work through Git Bash or WSL:
-
-```bash
-# Connect to K3s cluster (Windows Git Bash)
-cd packages/local
-bash connect-kubectl.sh
-
-# Use kubectl on Windows
-export KUBECONFIG=$PWD/kubeconfig
-kubectl get nodes
-
-# Disconnect
-bash disconnect-kubectl.sh
-```
-
 ### GitHub Actions Integration
 
 The K3s connection functionality is integrated into GitHub Actions workflows:
-
-- **ci.yml**: Deploys the infrastructure with production environment approval
-- **deploy-k8s.yml**: Connects to K3s cluster and deploys applications (depends on ci.yml)
-
-The workflows use the nx targets for better maintainability:
 
 ```yaml
 jobs:
@@ -198,11 +76,6 @@ jobs:
           npx nx run local:connect-kubectl
           echo "KUBECONFIG=$PWD/kubeconfig" >> $GITHUB_ENV
 
-      - name: Verify K3s Cluster
-        run: |
-          cd packages/local
-          npx nx run local:test-kubectl-connection
-
       - name: Deploy Applications
         run: |
           kubectl apply -f k8s/
@@ -213,12 +86,6 @@ jobs:
           cd packages/local
           npx nx run local:disconnect-kubectl
 ```
-
-### Platform-Specific Considerations
-
-- **Windows**: Uses PowerShell for port checking and different SSM command format
-- **Linux/GitHub Actions**: Uses netcat for port checking and JSON parameter format
-- **SSM Commands**: Automatically detects platform and uses appropriate command format
 
 ## 🔐 Security Considerations
 
