@@ -3,6 +3,7 @@
 ################################################################################
 
 resource "aws_security_group" "node_security_group" {
+  name        = "${local.naming_prefix}-sg-node"
   description = "Allow traffic for EC2 kubernetes nodes"
   vpc_id      = aws_vpc.k8s_vpc.id
 
@@ -51,9 +52,5 @@ resource "aws_security_group" "node_security_group" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${local.naming_prefix}-sg-node"
   }
 }
