@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GH_CMD="gh.exe"
+GH_CMD="gh"
 
 # Check if gh is authenticated
 if ! "$GH_CMD" auth status >/dev/null 2>&1; then
