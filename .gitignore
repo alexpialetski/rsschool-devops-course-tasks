@@ -14,3 +14,6 @@ terraform-outputs.env
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+k8s-infra
+api-server-chart

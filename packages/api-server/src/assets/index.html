@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server - DevOps Course</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 API Server</h1>
+        <p class="subtitle">RS School DevOps Course - Express API with K8s Integration</p>
+
+        <div class="endpoints">
+            <h3>Available Endpoints:</h3>
+            <div class="endpoint">
+                <span><span class="method">GET</span> /</span>
+                <span>This page</span>
+            </div>
+            <div class="endpoint">
+                <span><span class="method">GET</span> /api/health</span>
+                <span>Health check</span>
+            </div>
+            <div class="endpoint">
+                <span><span class="method">GET</span> /api/metrics</span>
+                <span>OpenTelemetry metrics</span>
+            </div>
+        </div>
+
+        <div class="uptime">
+            Server uptime: <span id="uptime">Loading...</span>
+        </div>
+    </div>
+
+    <script>
+        // Update uptime every second
+        setInterval(() => {
+            fetch('/api/uptime')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('uptime').textContent = data.uptime + 's';
+                })
+                .catch(() => {
+                    document.getElementById('uptime').textContent = 'Error loading';
+                });
+        }, 1000);
+    </script>
+</body>
+</html>
