@@ -27,3 +27,7 @@ provider "aws" {
 provider "tls" {}
 
 provider "random" {}
+
+# nx-terraform-metadata-start
+# providers: aws,random,tls
+# nx-terraform-metadata-end

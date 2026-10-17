@@ -54,6 +54,8 @@ The infrastructure consists of three main components:
    npx nx run cluster:terraform-apply
    ```
 
+   Terraform targets (`terraform-init`, `-plan`, `-apply`, `-destroy`, `-validate`, `-fmt`, `-output`) are inferred by the [nx-terraform](https://www.npmjs.com/package/nx-terraform) ([docs](https://alexpialetski.github.io/nx-terraform/)) Nx plugin from the `nx-terraform` metadata in each Terraform project's `project.json`. Use `--configuration=dev|stable` on `cluster` plan/destroy to pick the tfvars file, and run `npx nx sync` after changing Terraform providers/modules to refresh the plugin metadata.
+
 #### Option 2: Manual Setup (Traditional Method)
 
 1. **AWS Credentials**

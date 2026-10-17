@@ -30,3 +30,7 @@ provider "aws" {
 provider "local" {}
 
 provider "external" {}
+
+# nx-terraform-metadata-start
+# providers: aws,external,local, modules: terraform-module/github-oidc-provider/aws@~> 1
+# nx-terraform-metadata-end

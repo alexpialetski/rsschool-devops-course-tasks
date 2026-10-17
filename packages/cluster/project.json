@@ -5,14 +5,8 @@
   "sourceRoot": "packages/cluster",
   "targets": {
     "terraform-init": {
-      "dependsOn": [
-        {
-          "projects": ["setup"],
-          "target": "terraform-apply"
-        }
-      ],
-      "options": {
-        "args": ["-backend-config=../setup/backend.config", "-reconfigure"]
+      "metadata": {
+        "backendProject": "setup"
       }
     },
     "terraform-plan": {
@@ -26,7 +20,6 @@
         }
       }
     },
-    "terraform-apply": {},
     "terraform-destroy": {
       "defaultConfiguration": "dev",
       "configurations": {
@@ -37,10 +30,12 @@
           "args": ["-var-file=./tfvars/stable.tfvars"]
         }
       }
-    },
-    "terraform-fmt": {},
-    "terraform-validate": {},
-    "terraform-output": {}
+    }
   },
-  "tags": ["infrastructure", "terraform"]
+  "tags": ["infrastructure", "terraform"],
+  "metadata": {
+    "nx-terraform": {
+      "projectType": "stateful"
+    }
+  }
 }
