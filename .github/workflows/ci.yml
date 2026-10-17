@@ -3,6 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main]
+    paths-ignore:
+      # App pipeline is handled by app.yml
+      - 'packages/api-server/**'
+      - 'packages/api-server-chart/**'
+      - '.github/workflows/app.yml'
 
 env:
   # Nx Cloud configuration

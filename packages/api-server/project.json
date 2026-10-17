@@ -9,7 +9,6 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
       "options": {
         "buildTarget": "api-server:build",
         "runBuildTargetDependencies": false,
@@ -28,7 +27,7 @@
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "cache": true,
-      "defaultConfiguration": "development",
+      "defaultConfiguration": "production",
       "options": {
         "target": "node",
         "compiler": "tsc",
@@ -94,7 +93,7 @@
       },
       "configurations": {
         "local": {
-          "command": "minikube image load api-server:latest"
+          "command": "k3d image import api-server:latest -c rsschool"
         }
       }
     }
