@@ -1,0 +1,43 @@
+{
+  "name": "argocd",
+  "projectType": "application",
+  "root": "packages/argocd",
+  "sourceRoot": "packages/argocd",
+  "targets": {
+    "cluster-up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./{projectRoot}/scripts/cluster-up.sh"
+      }
+    },
+    "cluster-down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./{projectRoot}/scripts/cluster-down.sh"
+      }
+    },
+    "bootstrap": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./{projectRoot}/scripts/bootstrap.sh"
+      }
+    },
+    "ui": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./{projectRoot}/scripts/ui.sh"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "for f in {projectRoot}/scripts/*.sh; do bash -n \"$f\" || exit 1; echo \"ok $f\"; done",
+          "node {projectRoot}/scripts/validate-yaml.js {projectRoot}/values.yaml {projectRoot}/apps/*.yaml"
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": ["type:gitops"]
+}
