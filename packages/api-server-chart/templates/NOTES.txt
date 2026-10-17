@@ -1,0 +1,16 @@
+{{ include "api-server.fullname" . }} deployed in namespace {{ .Release.Namespace }}.
+
+{{- if .Values.ingress.enabled }}
+
+Reach it through the ingress (class: {{ .Values.ingress.className }}){{ with .Values.ingress.host }} at http://{{ . }}{{ $.Values.ingress.path }}{{ end }}.
+{{- else }}
+
+Port-forward to access it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "api-server.fullname" . }} 8080:{{ .Values.service.port }}
+  curl http://127.0.0.1:8080/api/health
+{{- end }}
+
+Endpoints: /  /api/health  /api/load-test (CPU load for HPA demos)
+
+Run the chart test:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
