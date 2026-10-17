@@ -1,0 +1,6 @@
+apiVersion: v2
+name: api-server
+description: Helm chart for the RS School DevOps course Express API server
+type: application
+version: 0.1.0
+appVersion: "latest"

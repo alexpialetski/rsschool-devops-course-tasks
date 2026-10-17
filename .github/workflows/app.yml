@@ -1,0 +1,173 @@
+name: App Pipeline
+
+# Builds, tests and publishes the api-server image to GHCR, then bumps the
+# image tag in the Helm chart (GitOps: Argo CD watches packages/api-server-chart
+# on main). No AWS credentials are needed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/api-server/**'
+      - 'packages/api-server-chart/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/app.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/api-server/**'
+      - 'packages/api-server-chart/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/app.yml'
+  workflow_dispatch:
+
+# Least privilege by default; jobs that need more declare it themselves.
+permissions:
+  contents: read
+
+env:
+  NX_CLOUD_DISTRIBUTED_EXECUTION: false
+  IMAGE_NAME: ghcr.io/${{ github.repository }}/api-server
+
+jobs:
+  # Job 1: lint, test and build the app and lint the chart
+  verify:
+    # Loop guard: skip the tag-bump commit made by bump-chart (belt and braces
+    # on top of the "[skip ci]" marker, which GitHub already honours).
+    if: >-
+      !(github.event_name == 'push' &&
+        contains(github.event.head_commit.message, '[skip ci]'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and test
+        run: npx nx run-many -t lint test -p api-server api-server-chart
+
+      # Build separately: only the app has a "production" configuration
+      - name: Build (production)
+        run: npx nx build api-server --configuration=production
+
+  # Job 2: build and push the multi-arch image (main / manual runs only)
+  image:
+    needs: verify
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app (production)
+        run: npx nx build api-server --configuration=production
+
+      - name: Compute image tag
+        id: vars
+        run: echo "tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.tag }}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: packages/api-server
+          file: packages/api-server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 3: commit the new image tag into the chart for Argo CD to pick up
+  bump-chart:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Serialize bumps so concurrent runs don't race on main
+    concurrency:
+      group: bump-chart
+      cancel-in-progress: false
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set image tag in values.yaml
+        env:
+          TAG: ${{ needs.image.outputs.tag }}
+        run: yq -i '.image.tag = strenv(TAG)' packages/api-server-chart/values.yaml
+
+      - name: Commit and push
+        env:
+          TAG: ${{ needs.image.outputs.tag }}
+        run: |
+          if git diff --quiet -- packages/api-server-chart/values.yaml; then
+            echo "Chart already at ${TAG}; nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/api-server-chart/values.yaml
+          git commit -m "chore(api-server-chart): bump image to ${TAG} [skip ci]"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing and retrying"
+            git pull --rebase origin main
+          done
+          echo "Failed to push after retries" >&2
+          exit 1

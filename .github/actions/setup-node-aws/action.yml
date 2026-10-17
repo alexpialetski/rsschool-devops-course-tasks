@@ -13,7 +13,7 @@ inputs:
   node-version:
     description: 'Node.js version'
     required: false
-    default: '20'
+    default: '22'
 outputs:
   aws-account-id:
     description: 'AWS Account ID retrieved from credentials'

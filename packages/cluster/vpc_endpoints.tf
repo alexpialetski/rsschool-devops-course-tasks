@@ -11,7 +11,7 @@ locals {
 ################################################################################
 
 resource "aws_security_group" "ssm_https" {
-  name        = "allow_ssm"
+  name        = "${local.naming_prefix}-ssm-sg"
   description = "Allow SSM traffic"
   vpc_id      = aws_vpc.k8s_vpc.id
 
@@ -36,10 +36,6 @@ resource "aws_security_group" "ssm_https" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${local.naming_prefix}-ssm-sg"
   }
 }
 

@@ -2,6 +2,8 @@
 
 This package provisions a production-ready K3s Kubernetes cluster on AWS with high availability, security, and scalability features.
 
+> Nx targets for this package are inferred by the [nx-terraform](https://www.npmjs.com/package/nx-terraform) ([docs](https://alexpialetski.github.io/nx-terraform/)) plugin. This is a `stateful` project whose `terraform-init` has `metadata.backendProject: "setup"`, so init uses `-backend-config=../setup/backend.config` and depends on `setup:terraform-apply`. `terraform-plan`/`terraform-destroy` accept `--configuration=dev|stable` (var files in `tfvars/`).
+
 ## 📋 Overview
 
 The cluster package creates a complete K3s Kubernetes cluster with:

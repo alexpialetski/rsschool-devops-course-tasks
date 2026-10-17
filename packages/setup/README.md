@@ -2,6 +2,8 @@
 
 This package creates the foundational AWS infrastructure required for the Terraform backend state management.
 
+> Nx targets for this package (`terraform-init`, `-plan`, `-apply`, `-destroy`, `-validate`, `-fmt`, `-output`) are inferred by the [nx-terraform](https://www.npmjs.com/package/nx-terraform) ([docs](https://alexpialetski.github.io/nx-terraform/)) plugin. This project is declared as a `backend` project (`metadata["nx-terraform"].projectType` in `project.json`); `cluster` points to it via `terraform-init` `metadata.backendProject`.
+
 ## 📋 Overview
 
 The setup package creates foundational AWS infrastructure for Terraform state management:

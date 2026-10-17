@@ -6,12 +6,13 @@ The workflows are designed for scenarios where AWS accounts are temporary (like 
 
 ## 📋 Overview
 
-The CI/CD pipeline consists of four main workflows:
+The CI/CD pipeline consists of five workflows:
 
 1. **CI/CD Pipeline** (`ci.yml`) - Automated infrastructure deployment and management
-2. **Deploy K8s** (`deploy-k8s.yml`) - Automated K8s application deployment
+2. **Deploy K8s** (`deploy-k8s.yml`) - Bootstraps Argo CD on the AWS cluster
 3. **PR Validation** (`pr-validation.yml`) - Pull request validation with security scanning
 4. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
+5. **App Pipeline** (`app.yml`) - api-server image to GHCR and chart tag bump for Argo CD (no AWS needed)
 
 ## 🔧 Required Configuration
 
@@ -35,6 +36,7 @@ Configure these variables in your GitHub repository (Settings > Secrets and vari
 #### AWS Configuration
 
 - `AWS_REGION`: AWS region for deployment (default: `us-east-1`)
+- `AWS_ENABLED`: set to `true` while a live AWS account is configured. Without it the AWS jobs (`ci.yml`, the `plan` job of `pr-validation.yml`) are skipped; offline Terraform checks and the app pipeline always run.
 
 ### Environment Variables
 
@@ -243,3 +245,22 @@ The workflows leverage Nx workspace features:
 - [Nx Documentation](https://nx.dev/)
 - [Terraform Documentation](https://www.terraform.io/docs)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
+
+## 🚀 App Pipeline (`app.yml`)
+
+Builds and delivers `packages/api-server` without any AWS credentials.
+
+| Job | Runs on | What it does |
+| --- | --- | --- |
+| `verify` | PR + push to main | `npm ci`, lint/test `api-server` and `api-server-chart` (`helm lint`), production build |
+| `image` | push to main / manual | Builds multi-arch (amd64, arm64) image, pushes `ghcr.io/<owner>/<repo>/api-server` tagged `sha-<short>` and `latest` |
+| `bump-chart` | after `image` | Sets `image.tag` in `packages/api-server-chart/values.yaml` via `yq` and pushes to `main`; Argo CD then syncs |
+
+**Triggers:** only changes to `packages/api-server/**`, `packages/api-server-chart/**`, `package.json`, `package-lock.json` or the workflow itself. `ci.yml` and `pr-validation.yml` (Terraform) ignore those same paths.
+
+**Loop prevention:** the bump commit message ends with `[skip ci]` (GitHub skips push workflows for it) and `verify` also has an `if` checking for the marker, so the bump never retriggers the pipeline. Pushes use `GITHUB_TOKEN`, which by design does not trigger other workflows either.
+
+**One-time setup:**
+- Settings > Actions > General > Workflow permissions: "Read and write permissions".
+- If `main` is branch-protected, allow `github-actions[bot]` to bypass (or the bump push will be rejected).
+- After the first push, make the GHCR package public (Package settings > Change visibility) or give the cluster an image pull secret.

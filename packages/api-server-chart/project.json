@@ -1,0 +1,28 @@
+{
+  "name": "api-server-chart",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "root": "packages/api-server-chart",
+  "sourceRoot": "packages/api-server-chart",
+  "tags": ["type:chart", "scope:api"],
+  "targets": {
+    "helm-template": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["{projectRoot}/**/*"],
+      "options": {
+        "command": "helm template api-server . --namespace api-server",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["{projectRoot}/**/*"],
+      "options": {
+        "command": "helm lint . --strict",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

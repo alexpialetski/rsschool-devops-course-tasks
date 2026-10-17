@@ -73,7 +73,8 @@ fi
 aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
 aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 
-# Optionally set default region if present in .keys
-if [ ! -z "$AWS_DEFAULT_REGION" ]; then
-  aws configure set region "$AWS_DEFAULT_REGION"
+# Set default region from .keys or use us-east-1 if not present
+if [ -z "$AWS_DEFAULT_REGION" ]; then
+  AWS_DEFAULT_REGION="us-east-1"
 fi
+aws configure set region "$AWS_DEFAULT_REGION"

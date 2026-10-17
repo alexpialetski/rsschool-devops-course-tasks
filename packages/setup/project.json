@@ -3,13 +3,9 @@
   "projectType": "application",
   "root": "packages/setup",
   "sourceRoot": "packages/setup",
+  "// targets": "terraform-* targets are inferred by nx-terraform; to see all run: nx show project setup --web",
   "targets": {
-    "terraform-init": {},
-    "terraform-plan": {
-      "cache": true
-    },
     "terraform-apply": {
-      "cache": true,
       "outputs": [
         "{projectRoot}/terraform.tfstate",
         "{projectRoot}/backend.config"
@@ -23,8 +19,6 @@
         }
       ]
     },
-    "terraform-fmt": {},
-    "terraform-validate": {},
     "terraform-clean": {
       "executor": "nx:run-commands",
       "options": {
@@ -33,5 +27,10 @@
       }
     }
   },
-  "tags": ["infrastructure", "terraform"]
+  "tags": ["infrastructure", "terraform"],
+  "metadata": {
+    "nx-terraform": {
+      "projectType": "backend"
+    }
+  }
 }

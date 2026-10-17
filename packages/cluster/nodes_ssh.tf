@@ -31,9 +31,8 @@ resource "aws_secretsmanager_secret_version" "nodes_ssh_private_key" {
 }
 
 # Generate SSH setup script
-data "template_file" "ssh_setup" {
-  template = file("${path.module}/templates/ssh_private_key.sh.tpl")
-  vars = {
+locals {
+  ssh_setup_script = templatefile("${path.module}/templates/ssh_private_key.sh.tpl", {
     secret_name = aws_secretsmanager_secret.nodes_ssh_private_key.name
-  }
+  })
 }

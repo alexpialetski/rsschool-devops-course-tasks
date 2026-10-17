@@ -1,96 +1,31 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "namedInputs": {
-    "terraform-files": [
-      "{projectRoot}/**/*.tf",
-      "{projectRoot}/templates/*",
-      "{projectRoot}/tfvars/*"
-    ],
-    "terraform-env": [
-      {
-        "env": "TF_VAR_region"
-      },
-      {
-        "env": "TF_VAR_account_id"
-      },
-      {
-        "env": "TF_WORKSPACE"
-      }
-    ],
-    "terraform-all": ["terraform-files", "terraform-env"]
-  },
-  "targetDefaults": {
-    "terraform-init": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "{projectRoot}/provider.tf",
-        "{projectRoot}/backend.tf",
-        "terraform-env"
-      ],
-      "outputs": [
-        "{projectRoot}/.terraform",
-        "{projectRoot}/.terraform.lock.hcl"
-      ],
+  "nxCloudId": "686e975426cf276f670bc399",
+  "plugins": [
+    {
+      "plugin": "nx-terraform"
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
       "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform init"
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     },
-    "terraform-plan": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["terraform-init"],
-      "inputs": ["terraform-all"],
+    {
+      "plugin": "@nx/eslint/plugin",
       "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform plan -out=tfplan"
+        "targetName": "lint"
       }
     },
-    "terraform-apply": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["terraform-plan"],
-      "inputs": ["terraform-all", "{projectRoot}/tfplan"],
+    {
+      "plugin": "@nx/jest/plugin",
       "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform apply -auto-approve tfplan"
-      }
-    },
-    "terraform-fmt": {
-      "cache": true,
-      "executor": "nx:run-commands",
-      "inputs": ["terraform-files"],
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform fmt -write=true"
-      }
-    },
-    "terraform-validate": {
-      "cache": true,
-      "executor": "nx:run-commands",
-      "dependsOn": ["terraform-init"],
-      "inputs": ["terraform-all"],
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform validate"
-      }
-    },
-    "terraform-destroy": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["terraform-init"],
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "terraform destroy -auto-approve"
-      }
-    },
-    "terraform-output": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["terraform-init"],
-      "outputs": ["{projectRoot}/terraform-outputs.env"],
-      "options": {
-        "command": "terraform output -json | jq -r \"to_entries[] | \\\"\\(.key)=\\(.value.value)\\\"\" > terraform-outputs.env",
-        "cwd": "{projectRoot}"
+        "targetName": "test"
       }
     }
-  },
-  "nxCloudId": "686e975426cf276f670bc399"
+  ]
 }
