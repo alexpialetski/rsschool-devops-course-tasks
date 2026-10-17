@@ -6,12 +6,13 @@ The workflows are designed for scenarios where AWS accounts are temporary (like 
 
 ## 📋 Overview
 
-The CI/CD pipeline consists of four main workflows:
+The CI/CD pipeline consists of five workflows:
 
 1. **CI/CD Pipeline** (`ci.yml`) - Automated infrastructure deployment and management
-2. **Deploy K8s** (`deploy-k8s.yml`) - Automated K8s application deployment
+2. **Deploy K8s** (`deploy-k8s.yml`) - Bootstraps Argo CD on the AWS cluster
 3. **PR Validation** (`pr-validation.yml`) - Pull request validation with security scanning
 4. **Manual Infrastructure** (`manual-infrastructure.yml`) - Manual deployment controls
+5. **App Pipeline** (`app.yml`) - api-server image to GHCR and chart tag bump for Argo CD (no AWS needed)
 
 ## 🔧 Required Configuration
 
