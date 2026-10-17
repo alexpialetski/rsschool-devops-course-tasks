@@ -1,30 +1,23 @@
 replicaCount: 2
-
 image:
   repository: ghcr.io/alexpialetski/rsschool-devops-course-tasks/api-server
-  tag: "latest"
+  tag: "sha-233d93d"
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
-
 nameOverride: ""
 fullnameOverride: ""
-
 serviceAccount:
   create: true
   automount: false
   annotations: {}
   name: ""
-
 podAnnotations: {}
 podLabels: {}
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1001
   runAsGroup: 1001
   fsGroup: 1001
-
 securityContext:
   runAsNonRoot: true
   runAsUser: 1001
@@ -33,9 +26,7 @@ securityContext:
   capabilities:
     drop:
       - ALL
-
 containerPort: 3000
-
 # Environment variables for the container.
 # Set OTEL_EXPORTER_OTLP_ENDPOINT to opt in to telemetry.
 env:
@@ -43,14 +34,11 @@ env:
     value: "3000"
   - name: NODE_ENV
     value: production
-
 # Additional environment variables (same format as `env`).
 extraEnv: []
-
 service:
   type: ClusterIP
   port: 80
-
 ingress:
   enabled: true
   className: traefik
@@ -60,7 +48,6 @@ ingress:
   path: /
   pathType: Prefix
   tls: []
-
 resources:
   requests:
     cpu: 100m
@@ -68,7 +55,6 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
-
 probes:
   startup:
     failureThreshold: 30
@@ -83,17 +69,14 @@ probes:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 5
   targetCPUUtilizationPercentage: 60
-
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
-
 nodeSelector: {}
 tolerations: []
 affinity: {}
