@@ -31,9 +31,10 @@ npx nx run argocd:cluster-down   # cleanup
 ## AWS
 
 ```bash
-npx nx run local:connect-kubectl
-npx nx run argocd:bootstrap -- --kubeconfig packages/local/kubeconfig
+npx nx run argocd:bootstrap-aws
 ```
+
+`bootstrap-aws` depends on `local:connect-kubectl` (SSM tunnel + `packages/local/kubeconfig`), so Nx opens the tunnel first. Equivalent manual form: `nx run local:connect-kubectl` then `nx run argocd:bootstrap -- --kubeconfig packages/local/kubeconfig`.
 
 The `Deploy K8s Applications` workflow does the same from CI (manual `workflow_dispatch`).
 

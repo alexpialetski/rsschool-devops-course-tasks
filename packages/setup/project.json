@@ -3,6 +3,7 @@
   "projectType": "application",
   "root": "packages/setup",
   "sourceRoot": "packages/setup",
+  "// targets": "terraform-* targets are inferred by nx-terraform; to see all run: nx show project setup --web",
   "targets": {
     "terraform-apply": {
       "outputs": [

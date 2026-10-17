@@ -3,11 +3,13 @@
   "projectType": "application",
   "root": "packages/cluster",
   "sourceRoot": "packages/cluster",
+  "// targets": "terraform-* targets are inferred by nx-terraform; to see all run: nx show project cluster --web",
   "targets": {
     "terraform-init": {
       "metadata": {
         "backendProject": "setup"
-      }
+      },
+      "cache": true
     },
     "terraform-plan": {
       "defaultConfiguration": "dev",
