@@ -1,5 +1,9 @@
 # Image for the pre-built api-server: run `nx build api-server --configuration=production` first
-FROM node:22-alpine AS deps
+#
+# Dependencies are pure JavaScript, so they are installed on the build platform and copied
+# into the target image. The target stage has no RUN steps, which keeps multi-arch builds
+# off QEMU emulation (node 22 crashes there with SIGILL). Requires BuildKit (Docker 23+ default).
+FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
 WORKDIR /app
 
 # dist contains main.js, assets and a generated package.json + package-lock.json
@@ -15,12 +19,10 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000
 
-RUN addgroup -g 1001 --system api && \
-    adduser -u 1001 --system -G api api
+# Numeric non-root user (matches runAsUser in the Helm chart); no passwd entry needed
+COPY --from=deps --chown=1001:1001 /app ./
 
-COPY --from=deps --chown=api:api /app ./
-
-USER api
+USER 1001:1001
 
 EXPOSE 3000
 
