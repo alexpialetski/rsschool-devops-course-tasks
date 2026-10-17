@@ -41,7 +41,7 @@ Terraform targets are inferred by the [nx-terraform](https://www.npmjs.com/packa
 
 ## ⚡ Local GitOps demo (no AWS)
 
-Requires Docker, [k3d](https://k3d.io), `kubectl`, `helm`, Node.js 20.
+Requires Docker, [k3d](https://k3d.io), `kubectl`, `helm`, Node.js 22.
 
 ```bash
 npm ci
@@ -67,7 +67,7 @@ npx nx run-many -t lint test -p api-server api-server-chart argocd
 ### Prerequisites
 
 - AWS CLI configured with appropriate credentials
-- Node.js (v20+) and npm
+- Node.js (v22+) and npm
 - Terraform (v1.8+)
 - GitHub CLI (`gh`) for secrets management
 

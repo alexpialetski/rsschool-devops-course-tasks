@@ -1,5 +1,5 @@
 # Image for the pre-built api-server: run `nx build api-server --configuration=production` first
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
 # dist contains main.js, assets and a generated package.json + package-lock.json
@@ -8,7 +8,7 @@ RUN npm ci --prefix api --omit=dev && npm cache clean --force
 
 # ------------------------------------------------
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
