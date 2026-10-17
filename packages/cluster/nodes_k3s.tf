@@ -1,5 +1,5 @@
-data "template_file" "ssm_start" {
-  template = file("${path.module}/templates/ssm_start.sh.tpl")
+locals {
+  ssm_start_script = templatefile("${path.module}/templates/ssm_start.sh.tpl", {})
 }
 
 #################################################################################
@@ -53,34 +53,31 @@ resource "aws_secretsmanager_secret_version" "k3s_token" {
   secret_string = random_password.k3s_token.result
 }
 
-data "template_file" "k3s_token" {
-  template = file("${path.module}/templates/k3s_token.sh.tpl")
-  vars = {
+locals {
+  k3s_token_script = templatefile("${path.module}/templates/k3s_token.sh.tpl", {
     secret_name = aws_secretsmanager_secret.k3s_token.name
-  }
+  })
 }
 
 #################################################################################
 # K3S Server and Agent Configuration for ec2 instances
 #################################################################################
 
-data "template_file" "k3s_server" {
-  template = file("${path.module}/templates/k3s_server.sh.tpl")
-  vars = {
-    ssm_start   = data.template_file.ssm_start.rendered
-    ssh_setup   = data.template_file.ssh_setup.rendered
-    k3s_token   = data.template_file.k3s_token.rendered
+locals {
+  k3s_server_script = templatefile("${path.module}/templates/k3s_server.sh.tpl", {
+    ssm_start   = local.ssm_start_script
+    ssh_setup   = local.ssh_setup_script
+    k3s_token   = local.k3s_token_script
     secret_name = aws_secretsmanager_secret.k3s_kubeconfig.name
     aws_region  = data.aws_region.current.id
-  }
+  })
 }
 
-data "template_file" "k3s_agent" {
-  template = file("${path.module}/templates/k3s_agent.sh.tpl")
-  vars = {
-    ssm_start        = data.template_file.ssm_start.rendered
-    ssh_setup        = data.template_file.ssh_setup.rendered
-    k3s_token        = data.template_file.k3s_token.rendered
+locals {
+  k3s_agent_script = templatefile("${path.module}/templates/k3s_agent.sh.tpl", {
+    ssm_start        = local.ssm_start_script
+    ssh_setup        = local.ssh_setup_script
+    k3s_token        = local.k3s_token_script
     control_plane_ip = aws_instance.control_plane_node[0].private_ip
-  }
+  })
 }

@@ -84,8 +84,8 @@ resource "aws_eip_association" "nat_instance_eip_association" {
 ################################################################################
 
 
-data "template_file" "nat_forwarding" {
-  template = file("${path.module}/templates/nat_forwarding.sh.tpl")
+locals {
+  nat_forwarding_script = templatefile("${path.module}/templates/nat_forwarding.sh.tpl", {})
 }
 
 resource "aws_instance" "nat_instance" {
@@ -96,7 +96,7 @@ resource "aws_instance" "nat_instance" {
   subnet_id              = aws_subnet.public[count.index].id
   vpc_security_group_ids = [aws_security_group.nat_instance_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.nat_instance_profile.name
-  user_data              = data.template_file.nat_forwarding.rendered
+  user_data              = local.nat_forwarding_script
 
   # Disable source/destination check (required for NAT functionality)
   source_dest_check = false

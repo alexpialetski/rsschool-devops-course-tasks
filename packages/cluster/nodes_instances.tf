@@ -23,7 +23,7 @@ resource "aws_instance" "control_plane_node" {
   subnet_id     = aws_subnet.private[count.index % length(aws_subnet.private)].id
   instance_type = var.control_plane_config.instanceType
 
-  user_data                   = data.template_file.k3s_server.rendered
+  user_data                   = local.k3s_server_script
   user_data_replace_on_change = true
 
   launch_template {
@@ -46,7 +46,7 @@ resource "aws_instance" "agent_node" {
   subnet_id     = aws_subnet.private[count.index % length(aws_subnet.private)].id
   instance_type = var.agent_nodes_config.instanceType
 
-  user_data                   = data.template_file.k3s_agent.rendered
+  user_data                   = local.k3s_agent_script
   user_data_replace_on_change = true
 
   launch_template {
