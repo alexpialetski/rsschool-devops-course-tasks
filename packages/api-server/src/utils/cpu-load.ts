@@ -25,28 +25,27 @@ export function generateCPULoad({
 }: CPULoadOptions = {}): CPULoadResult {
   const startTime = Date.now();
 
-  // Start CPU intensive work in background
+  // Busy for `intensity` of every slice, idle for the rest, so the event loop
+  // keeps serving requests (health probes) while the load runs
+  const sliceMs = 100;
+  const busyMs = sliceMs * intensity;
+  const idleMs = Math.max(5, sliceMs - busyMs);
+
   setImmediate(() => {
     const endTime = startTime + duration;
 
     const loadCPU = () => {
-      // Perform CPU intensive calculations
-      let calculationResult = 0;
-      const iterations = 1500000 * intensity; // Adjusted for consistent load
+      const sliceEnd = Math.min(Date.now() + busyMs, endTime);
+      let sink = 0;
 
-      for (let i = 0; i < iterations; i++) {
-        calculationResult +=
-          Math.sqrt(i) * Math.sin(i) * Math.cos(i) * Math.tan(i / 1000);
+      while (Date.now() < sliceEnd) {
+        for (let i = 1; i < 10000; i++) {
+          sink += Math.sqrt(i) * Math.sin(i);
+        }
       }
 
-      // Use result to prevent optimization
-      if (calculationResult > 0) {
-        const targetIterationTime = 150; // Target 150ms per iteration
-        const sleepTime = Math.max(5, targetIterationTime * (1 - intensity));
-
-        if (Date.now() < endTime) {
-          setTimeout(loadCPU, sleepTime);
-        }
+      if (Date.now() < endTime && Number.isFinite(sink)) {
+        setTimeout(loadCPU, idleMs);
       }
     };
 
