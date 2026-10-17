@@ -16,7 +16,6 @@ app.use(appRouter);
 const server = app.listen(port, () => {
   console.log(`🚀 API Server listening at http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/api/health`);
-  console.log(` Prometheus metrics: http://localhost:9090/metrics`);
 });
 
 server.on('error', console.error);

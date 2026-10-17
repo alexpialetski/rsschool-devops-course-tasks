@@ -1,55 +1,33 @@
-# Multi-stage Dockerfile for pre-built api-server
-FROM node:18-alpine AS base
+# Image for the pre-built api-server: run `nx build api-server --configuration=production` first
+FROM node:20-alpine AS deps
+WORKDIR /app
 
-ENV HOST=0.0.0.0
-ENV PORT=3000
+# dist contains main.js, assets and a generated package.json + package-lock.json
+COPY ./dist ./api/
+RUN npm ci --prefix api --omit=dev && npm cache clean --force
 
-# Install pnpm globally to match the lock file
-RUN npm install -g pnpm
+# ------------------------------------------------
 
-# Create non-root user for security (shared across stages)
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3000
+
 RUN addgroup -g 1001 --system api && \
     adduser -u 1001 --system -G api api
 
-# ------------------------------------------------
-
-# Dependencies stage - Install production dependencies
-FROM base AS deps
-WORKDIR /app
-
-# Copy the entire pre-built dist (which includes package.json and pnpm-lock.yaml)
-COPY ./dist ./api/
-
-# Install production dependencies using pnpm to respect the lock file
-RUN pnpm --prefix api install --frozen-lockfile --prod
-
-# Change ownership
-RUN chown -R api:api .
-
-# ------------------------------------------------
-
-# Production image
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Copy the application with dependencies from deps stage
 COPY --from=deps --chown=api:api /app ./
 
 USER api
 
-# Expose port
 EXPOSE 3000
 
-# Health check with better timing for startup
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').request('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1)).end()"
 
-# Start the application with proper signal handling
 CMD ["node", "api"]
 
-# Add metadata labels for better maintainability
-LABEL maintainer="rsschool-devops-course" \
-      version="1.0" \
-      description="API Server for DevOps Course"
+LABEL org.opencontainers.image.source="https://github.com/alexpialetski/rsschool-devops-course-tasks" \
+      org.opencontainers.image.description="API Server for RS School DevOps Course"

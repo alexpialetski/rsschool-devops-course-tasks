@@ -90,11 +90,6 @@
         "command": "terraform output -json | jq -r \"to_entries[] | \\\"\\(.key)=\\(.value.value)\\\"\" > terraform-outputs.env",
         "cwd": "{projectRoot}"
       }
-    },
-    "@nx/esbuild:esbuild": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^default"]
     }
   },
   "nxCloudId": "686e975426cf276f670bc399",
@@ -119,12 +114,7 @@
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test"
-      },
-      "exclude": [
-        "api-server-e2e/**/*",
-        "my-api-e2e/**/*",
-        "packages/api-e2e/**/*"
-      ]
+      }
     }
   ]
 }

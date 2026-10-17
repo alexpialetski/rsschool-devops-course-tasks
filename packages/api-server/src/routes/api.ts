@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { generateCPULoad } from 'src/utils/cpu-load';
+import { generateCPULoad } from '../utils/cpu-load';
 
 export const router = Router();
 
