@@ -18,39 +18,81 @@ env:
   # Nx Cloud configuration
   NX_CLOUD_DISTRIBUTED_EXECUTION: false
   NX_BRANCH: ${{ github.event.number }}
-  
+
   # AWS Configuration (read-only for validation)
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  
+
   # Terraform Configuration - will be set dynamically after AWS authentication
   TF_WORKSPACE: default
 
 jobs:
+  # Job 1: offline checks, no AWS account needed
   validate:
     runs-on: ubuntu-latest
-    
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~1.8.0'
+
+      - name: Format Check
+        run: |
+          npx nx run-many -t terraform-fmt
+          git diff --exit-code || { echo "Run 'npx nx run-many -t terraform-fmt' and commit"; exit 1; }
+
+      - name: Validate Terraform (offline)
+        run: |
+          for project in setup cluster; do
+            terraform -chdir=packages/$project init -backend=false -input=false
+            terraform -chdir=packages/$project validate
+          done
+
+      - name: nx-terraform metadata in sync
+        run: npx nx sync:check
+
+  # Job 2: plan against AWS; opt in with the repository variable AWS_ENABLED=true
+  plan:
+    needs: validate
+    if: vars.AWS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Terraform Environment
-        uses: ./.github/actions/setup-terraform
+      - name: Setup Node.js and AWS
+        id: node-aws-setup
+        uses: ./.github/actions/setup-node-aws
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Validate Terraform (Cluster)
-        run: |
-          npx nx run cluster:terraform-validate
+      - name: Setup Terraform Environment
+        uses: ./.github/actions/setup-terraform
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-account-id: ${{ steps.node-aws-setup.outputs.aws-account-id }}
 
       - name: Plan Terraform (Cluster)
-        run: |
-          npx nx run cluster:terraform-plan --configuration=stable
+        run: npx nx run cluster:terraform-plan --configuration=stable
 
       - name: Comment PR with Plan Results
         uses: actions/github-script@v7
@@ -67,7 +109,7 @@ jobs:
               '- [ ] Review the Terraform changes\n' +
               '- [ ] Ensure all security checks pass\n' +
               '- [ ] Get approval from infrastructure team\n';
-            
+
             // Post comment
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -78,7 +120,7 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -36,6 +36,7 @@ Configure these variables in your GitHub repository (Settings > Secrets and vari
 #### AWS Configuration
 
 - `AWS_REGION`: AWS region for deployment (default: `us-east-1`)
+- `AWS_ENABLED`: set to `true` while a live AWS account is configured. Without it the AWS jobs (`ci.yml`, the `plan` job of `pr-validation.yml`) are skipped; offline Terraform checks and the app pipeline always run.
 
 ### Environment Variables
 

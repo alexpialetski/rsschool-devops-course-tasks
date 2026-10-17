@@ -25,6 +25,8 @@ env:
 jobs:
   # Job 1: Main CI - Lint, Format, Plan
   main:
+    # Needs a live AWS account; opt in with the repository variable AWS_ENABLED=true
+    if: vars.AWS_ENABLED == 'true'
     runs-on: ubuntu-latest
 
     steps:
